@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "ratata"
+version = "0.1.0"
+description = "My first Python project with Nix"
+authors = ["Pablo Rojas Rivera <rivera.pablo1090@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.scripts]
+start = "ratata.main:start"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
