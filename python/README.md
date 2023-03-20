@@ -4,7 +4,8 @@
 
 ````bash
 poetry new ${project}
-poetry install        # flakes needs the poetry.lock
+poetry install              # flakes needs the poetry.lock
+poetry add ${python-module} # adds python modules to poetry.lock
 ````
 2. add script
 
