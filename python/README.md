@@ -27,3 +27,11 @@ def start():
 ````bash
 poetry run start
 ````
+
+5. nix
+
+````bash
+nix build   # locally build application
+nix develop # devshell
+nix run     # run application
+````
