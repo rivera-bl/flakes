@@ -11,6 +11,9 @@ my_config = Config(
 )
 
 def main():
-	ec2 = boto3.resource('ec2', config=my_config)
-	for instance in ec2.instances.all():
-		print(instance.id)
+    ## list available services
+	session = boto3.Session()
+	services = session.get_available_services()
+	print(services)
+
+	# ec2 = boto3.resource('ec2', config=my_config)
