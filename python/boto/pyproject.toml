@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "boto"
+version = "0.1.0"
+description = ""
+authors = ["Pablo Rojas Rivera <rivera.pablo1090@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+boto3 = "^1.26.99"
+
+[tool.poetry.scripts]
+main = "boto.main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
