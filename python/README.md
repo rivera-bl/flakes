@@ -4,6 +4,7 @@
 
 ````bash
 poetry new ${project}
+cd ${project}
 poetry install              # flakes needs the poetry.lock
 poetry add ${python-module} # adds python modules to poetry.lock
 ````
@@ -12,27 +13,32 @@ poetry add ${python-module} # adds python modules to poetry.lock
 ````toml
 # pyproject.toml
 [tool.poetry.scripts]
-start = "${project}.main:start"
+main = "${project}.main:main"
 ````
 
 3. create script
 
 ````python
 # ${project}/main.py
-def start():
+def main():
     print("hello nix")
 ````
 
 4. run script
 
 ````bash
-poetry run start
+poetry run main
 ````
 
 5. nix
 
 ````bash
+git add .
 nix build   # locally build application
 nix develop # devshell
 nix run     # run application
 ````
+
+## TODO
+
+- [ ] single flake for all scripts? they look the same
