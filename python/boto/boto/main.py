@@ -20,6 +20,12 @@ my_config = Config(
 # # copy output url on selection
 # # open browser on selection
 def main():
+    for account in account_list():
+        print(account['accountId'], "|",
+              account['accountName'], "|",
+              account['emailAddress'])
+
+def account_list():
     # get token cached file
     tpath = "/home/wim/.aws/sso/cache/"
     tfile = os.listdir(tpath)[1]
@@ -33,9 +39,7 @@ def main():
     # list accounts
     client = boto3.client('sso')
     accounts = client.list_accounts(accessToken=token)
-    
-    # loop to get a space separated table of id, name, email
-    
+    # o = json.dumps(accounts, indent=2)
+    # print(o)
 
-    o = json.dumps(accounts, indent=2)
-    print(o)
+    return accounts['accountList']
