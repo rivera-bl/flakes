@@ -19,13 +19,15 @@ my_config = Config(
 # # execute fzf program as floating window
 # # copy output url on selection
 # # open browser on selection
-def main():
-    for account in account_list():
-        print(account['accountId'], "|",
-              account['accountName'], "|",
-              account['emailAddress'])
+client = boto3.client('sso')
 
-def account_list():
+def main():
+    accounts()
+
+# TODO format output with role names
+# TODO save output to cache file
+# TODO show with fzf tmux
+def accounts():
     # get token cached file
     tpath = "/home/wim/.aws/sso/cache/"
     tfile = os.listdir(tpath)[1]
@@ -34,12 +36,20 @@ def account_list():
     with open(tpath + tfile, 'r') as f:
         data = json.load(f)
         token = data['accessToken']
-        # print (token)
+        # print(token)
 
     # list accounts
-    client = boto3.client('sso')
     accounts = client.list_accounts(accessToken=token)
-    # o = json.dumps(accounts, indent=2)
-    # print(o)
+    o = json.dumps(accounts, indent=2)
+    print(o)
 
-    return accounts['accountList']
+    # for account in accounts:
+        # roles = client.list_account_roles(accessToken=token, accountId=account['accountId'])
+        # print(accountList)
+        # for role in roles:
+        #     print(account['accountId'], "|",
+        #           account['accountName'], "|",
+        #           account['emailAddress'], "|",
+        #           role['roleName'])
+
+    # return accounts['accountList']
