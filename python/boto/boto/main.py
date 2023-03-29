@@ -3,10 +3,12 @@
 # # list accounts with boto3
 # # transform output to use with fzf
 # # execute fzf program as floating window
+# # TODO set AWS_PROFILE
 # # TODO copy output url on selection
 # # TODO open browser on selection
 # # TODO turn into a binary 'fws' with different functions for login, load sessions, load accounts
 # # TODO document --help
+# # TODO set AWS_PROFILE
 
 import os
 import re
@@ -53,13 +55,11 @@ def menu():
 def login(sso_session):
     os.system('aws sso login --no-browser --profile ' + sso_session)
 
-
 def load():
     # get token cached file
     tpath = "/home/wim/.aws/sso/cache/"
     tfiles = [os.path.join(tpath, x) for x in os.listdir(tpath)]
     tnewest = max(tfiles , key = os.path.getctime)
-
 
     # get token value
     with open(tnewest, 'r') as f:
@@ -104,9 +104,9 @@ def load():
 
     # save sessions to ~/.aws/config
     with open(home + '.aws/config', 'w') as f:
-        toml.dump(t, archivo)
+        toml.dump(t, f)
 
-    # remove quotes from file datos.toml
+    # remove quotes from file ~/.aws/config
     with open(home + '.aws/config', 'r') as f:
         tq = f.read()
 
@@ -114,4 +114,3 @@ def load():
 
     with open(home + '.aws/config', 'w') as f:
         f.write(tr)
-
