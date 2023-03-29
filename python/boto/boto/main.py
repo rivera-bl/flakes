@@ -24,9 +24,6 @@ client = boto3.client('sso')
 def main():
     accounts()
 
-# TODO format output with role names
-# TODO save output to cache file
-# TODO show with fzf tmux
 def accounts():
     # get token cached file
     tpath = "/home/wim/.aws/sso/cache/"
@@ -39,17 +36,22 @@ def accounts():
         # print(token)
 
     # list accounts
-    accounts = client.list_accounts(accessToken=token)
-    o = json.dumps(accounts, indent=2)
-    print(o)
+    accounts = client.list_accounts(accessToken=token, maxResults=100)
+    # o = json.dumps(accounts, indent=2)
 
-    # for account in accounts:
-        # roles = client.list_account_roles(accessToken=token, accountId=account['accountId'])
-        # print(accountList)
-        # for role in roles:
-        #     print(account['accountId'], "|",
-        #           account['accountName'], "|",
-        #           account['emailAddress'], "|",
-        #           role['roleName'])
+    # '|' separated table with role, accountId, accountName, emailAddress
+    s = "accountId,roleName,accountName,emailAddress\n"
+    for account in accounts['accountList']:
+        # list roles for account using accountId
+        roles = client.list_account_roles(accessToken=token, accountId=account['accountId'])
 
-    # return accounts['accountList']
+        # print roleName, accountId, accountName, emailAddress for each accountId
+        for role in roles['roleList']:
+            o = account['accountId'], role['roleName'], account['accountName'], account['emailAddress']
+            s += ','.join(o) + "\n"
+
+    # save s to file on disk on current directory
+    with open('cache', 'w') as f:
+        f.write(s)
+
+    os.system("cat cache | column -t -s, | fzf --header-lines=1")
