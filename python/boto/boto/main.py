@@ -5,7 +5,6 @@
 # # execute fzf program as floating window
 # # TODO copy output url on selection
 # # TODO open browser on selection
-# # TODO create function to fill ~/.aws/config file with the sessions definition, use ROLE_ACCOUNT as session name
 # # TODO turn into a binary 'fws' with different functions for login, load sessions, load accounts
 # # TODO document --help
 
@@ -18,6 +17,7 @@ import subprocess
 from botocore.config import Config
 
 client    = boto3.client('sso')
+home = os.path.expanduser("~/")
 my_config = Config(
     region_name = 'us-east-1',
     signature_version = 'v4',
@@ -71,62 +71,47 @@ def load():
 
     # format to ',' separated strings
     s = "accountId,roleName,accountName,emailAddress\n"
+    t = {}
     for account in accounts['accountList']:
         # list roles for account using accountId
         roles = client.list_account_roles(accessToken=token, accountId=account['accountId'])
 
-        # print roleName, accountId, accountName, emailAddress for each accountId
+        # list of roleName, accountId, accountName, emailAddress for each accountId
         for role in roles['roleList']:
             o = account['accountId'], role['roleName'], account['accountName'], account['emailAddress']
             s += ','.join(o) + "\n"
+
             # join accountId and roleName as sso_session
             sso_session = account['accountId'] + '_' + role['roleName']
 
-            # TODO how to append new keys to a dictionary
-            t = {
-                'profile ' + sso_session: {
-                    'sso_session': sso_session,
-                    'sso_account_id': account['accountId'],
-                    'sso_role_name': role['roleName'],
-                    'region': 'us-east-1',
-                    'output': 'json'
-                },
-                'sso-session ' + sso_session: {
-                    'sso_start_url': 'https://d-90675d22db.awsapps.com/start#',
-                    'sso_region': 'us-east-1',
-                    'sso_registration_scopes': 'sso:account:access'
-                }
+            # create dictionary to save to toml file
+            t['profile ' + sso_session] = {
+                'sso_session': sso_session,
+                'sso_account_id': account['accountId'],
+                'sso_role_name': role['roleName'],
+                'region': 'us-east-1',
+                'output': 'json' 
+            }
+            t['sso-session ' + sso_session] = {
+                'sso_start_url': 'https://d-90675d22db.awsapps.com/start#',
+                'sso_region': 'us-east-1',
+                'sso_registration_scopes': 'sso:account:access'
             }
 
-    print(t)
-    # save s to file on disk on current directory
+    # save accounts to file on disk on current directory
     with open('cache', 'w') as f:
         f.write(s)
 
-    with open('datos.toml', 'w') as archivo:
-            toml.dump(t, archivo)
+    # save sessions to ~/.aws/config
+    with open(home + '.aws/config', 'w') as f:
+        toml.dump(t, archivo)
 
-    # # TODO generate ~/.aws/config file
-    # # TODO remove ""
-    # # split sso_session separated by _
-    # session_values = sso_session.split('_')
+    # remove quotes from file datos.toml
+    with open(home + '.aws/config', 'r') as f:
+        tq = f.read()
 
-    # t = {
-		# 'profile ' + sso_session: {
-    #         'sso_session': sso_session,
-    #         'sso_account_id': session_values[0],
-    #         'sso_role_name': session_values[1],
-    #         'region': 'us-east-1',
-    #         'output': 'json'
-		# },
-    #     'sso-session ' + sso_session: {
-    #         'sso_start_url': 'https://d-90675d22db.awsapps.com/start#',
-    #         'sso_region': 'us-east-1',
-    #         'sso_registration_scopes': 'sso:account:access'
-    #     }
-	# }
+    tr = tq.replace('"', '')
 
-	# # Escribir el diccionario en un archivo TOML
-    # with open('datos.toml', 'w') as archivo:
-    #     toml.dump(t, archivo)
-    # # TODO generate ~/.aws/config file
+    with open(home + '.aws/config', 'w') as f:
+        f.write(tr)
+
