@@ -1,17 +1,18 @@
-# Functions with AWS boto3
+# AWS SSO login with fzf
 
-## Advantages over sh
+```
+nix run "github:rivera-bl/flakes?dir=fws"
 
-### SSO login
+usage: main [-h] [-o] [-l]
 
-#### Shell
+AWS SSO login with fzf
 
-````bash
-_fzf_aws_sso_copy_url(){
-  export ACCESS_TOKEN=$(cat $(\ls -1d ~/.aws/sso/cache/* | grep -v botocore) | head -n 1 | jq -r "{accessToken} | .[] | select( . != null )" | head -n 1)
-  aws sso list-accounts --access-token ${ACCESS_TOKEN}
-  # jq nonsense..
-}
-````
+options:
+  -h, --help   show this help message and exit
+  -o, --load   Cargar cuentas en /tmp/fws/accounts.csv y sso.sessions en ~/.aws/config
+  -l, --login  Despliega `fzf` para seleccionar cuenta con la que iniciar sesión en AWS SSO.
+               Si es primera vez que se ejecuta el comando, entonces va ejecutar
+               automaticamente la función de --load, para obtener la lista de cuentas
+```
 
-### Python
+`nix run --refresh "github:rivera-bl/flakes?dir=fws" -- --login`
