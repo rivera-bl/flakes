@@ -3,13 +3,12 @@
 # # list accounts with boto3
 # # transform output to use with fzf
 # # execute fzf program as floating window
-# # TODO handle error when not picking an account to login
 # # TODO save cache to tmp directory
 # # TODO set AWS_PROFILE with tmux env and set starship
-# # TODO get url from output
-# # TODO open browser
 # # TODO turn into a binary 'fws' with different functions for login, load sessions, load accounts
 # # TODO document --help
+# # TODO get url from output
+# # TODO open browser
 
 import os
 import re
@@ -43,6 +42,9 @@ def menu():
 
     # fzf menu and save selection
     selraw = fzf.stdout.read()
+
+    if not selraw:
+        exit()
 
     # match the string that is on the beggining and before the first space
     accountId = re.search(r'^\S+', selraw.decode('utf-8'))
