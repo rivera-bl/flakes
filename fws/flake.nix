@@ -6,6 +6,7 @@
       supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       pkgs = forAllSystems (system: nixpkgs.legacyPackages.${system});
+      packageName = "fws";
     in
     {
       packages = forAllSystems (system: {
@@ -21,9 +22,11 @@
         };
       });
 
+      defaultPackage = self.packages.x86_64-linux;
+
       apps = forAllSystems (system: {
         default = {
-          program = "${self.packages.${system}.default}/bin/fws";
+          program = "${self.packages.${system}.default}/bin/${packageName}";
           type = "app";
         };
       });
