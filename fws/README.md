@@ -15,4 +15,7 @@ options:
                automaticamente la función de --load, para obtener la lista de cuentas
 ```
 
+![fws](../_docs/fws.png "Image")
+
+
 `nix run --refresh "github:rivera-bl/flakes?dir=fws" -- --login`
