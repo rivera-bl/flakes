@@ -1,5 +1,7 @@
 # AWS SSO login with fzf
 
+![fws](../_docs/images/fws.png "Image")
+
 ```
 $ nix run "github:rivera-bl/flakes?dir=fws"
 
@@ -14,8 +16,5 @@ options:
                Si es primera vez que se ejecuta el comando, entonces va ejecutar
                automaticamente la función de --load, para obtener la lista de cuentas
 ```
-
-![fws](../_docs/fws.png "Image")
-
 
 `nix run --refresh "github:rivera-bl/flakes?dir=fws" -- --login`
