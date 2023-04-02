@@ -23,7 +23,7 @@
 
       apps = forAllSystems (system: {
         default = {
-          program = "${self.packages.${system}.default}/bin/main";
+          program = "${self.packages.${system}.default}/bin/fws";
           type = "app";
         };
       });

@@ -11,7 +11,7 @@ boto3 = "^1.26.99"
 toml = "^0.10.2"
 
 [tool.poetry.scripts]
-main  = "fws.main:main"
+fws  = "fws.main:main"
 
 [build-system]
 requires = ["poetry-core"]
