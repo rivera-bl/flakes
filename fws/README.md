@@ -1,7 +1,7 @@
 # AWS SSO login with fzf
 
 ```
-nix run "github:rivera-bl/flakes?dir=fws"
+$ nix run "github:rivera-bl/flakes?dir=fws"
 
 usage: main [-h] [-o] [-l]
 
