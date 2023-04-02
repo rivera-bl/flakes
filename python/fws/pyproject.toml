@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "boto"
+name = "fws"
 version = "0.1.0"
 description = ""
 authors = ["Pablo Rojas Rivera <rivera.pablo1090@gmail.com>"]
@@ -11,7 +11,7 @@ boto3 = "^1.26.99"
 toml = "^0.10.2"
 
 [tool.poetry.scripts]
-main = "boto.main:main"
+main = "fws.main:main"
 
 [build-system]
 requires = ["poetry-core"]

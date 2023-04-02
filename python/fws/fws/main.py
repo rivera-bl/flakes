@@ -3,12 +3,13 @@
 # # list accounts with boto3
 # # transform output to use with fzf
 # # execute fzf program as floating window
-# # TODO set AWS_PROFILE
-# # TODO copy output url on selection
-# # TODO open browser on selection
+# # TODO handle error when not picking an account to login
+# # TODO save cache to tmp directory
+# # TODO set AWS_PROFILE with tmux env and set starship
+# # TODO get url from output
+# # TODO open browser
 # # TODO turn into a binary 'fws' with different functions for login, load sessions, load accounts
 # # TODO document --help
-# # TODO set AWS_PROFILE
 
 import os
 import re
@@ -19,7 +20,7 @@ import subprocess
 from botocore.config import Config
 
 client    = boto3.client('sso')
-home = os.path.expanduser("~/")
+home      = os.path.expanduser("~/")
 my_config = Config(
     region_name = 'us-east-1',
     signature_version = 'v4',
@@ -30,25 +31,24 @@ my_config = Config(
 )
 
 def main():
-    load()
-    # sso_session = menu()
-    # login(sso_session)
+    # load()
+    sso_session = menu()
+    login(sso_session)
 
 def menu():
     # piped cat and fzf
-    commas  = subprocess.Popen(['cat', 'cache'], stdout=subprocess.PIPE)
+    commas  = subprocess.Popen(['cat', home + 'code/personal/flakes/python/fws/cache'], stdout=subprocess.PIPE)
     columns = subprocess.Popen(['column', '-t', '-s,'], stdin=commas.stdout, stdout=subprocess.PIPE)
-    fzf     = subprocess.Popen(['fzf', '--header-lines=1'], stdin=columns.stdout, stdout=subprocess.PIPE)
+    fzf     = subprocess.Popen(['fzf', '--min-height=20', '--header-lines=1'], stdin=columns.stdout, stdout=subprocess.PIPE)
 
     # fzf menu and save selection
     selraw = fzf.stdout.read()
-    
+
     # match the string that is on the beggining and before the first space
     accountId = re.search(r'^\S+', selraw.decode('utf-8'))
     # string that matchs the second column
     roleName = re.search(r'(?<=\s)\S+', selraw.decode('utf-8'))
 
-    # TODO return selraw as array
     sso_session = accountId.group(0) + "_" + roleName.group(0) 
     return sso_session
 
