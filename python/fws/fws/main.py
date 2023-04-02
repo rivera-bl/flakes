@@ -19,8 +19,6 @@ import toml
 import subprocess
 from botocore.config import Config
 
-client    = boto3.client('sso')
-home      = os.path.expanduser("~/")
 my_config = Config(
     region_name = 'us-east-1',
     signature_version = 'v4',
@@ -29,6 +27,8 @@ my_config = Config(
         'mode': 'standard'
     }
 )
+client    = boto3.client('sso', config=my_config)
+home      = os.path.expanduser("~/")
 
 def main():
     # load()
