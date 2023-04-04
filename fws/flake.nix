@@ -22,8 +22,6 @@
         };
       });
 
-      defaultPackage = self.packages.x86_64-linux;
-
       apps = forAllSystems (system: {
         default = {
           program = "${self.packages.${system}.default}/bin/${packageName}";
