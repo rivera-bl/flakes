@@ -16,6 +16,7 @@ function _tmux_send_env_session(){
 }
 
 function set_awsprofile(){
+  # get AWS account from cluster ARN
   ACCOUNT=$(kubectl config view --minify -o jsonpath='{.contexts[].context.cluster}' | \
     cut -d':' -f5)
   [ -z "$ACCOUNT" ] && exit 1
@@ -34,7 +35,7 @@ function set_context(){
   fi
 }
 
-function get_clusters(){
+function add_cluster(){
   sts=$(aws sts get-caller-identity --region us-east-1)
   [ -z "$sts" ] && { fws --login;}
 
@@ -49,7 +50,7 @@ function get_clusters(){
 while getopts ":cr" opt; do
   case ${opt} in
     c) set_context;;
-    r) get_clusters;;
+    r) add_cluster;;
     \?) echo "Opción inválida: -$OPTARG" >&2; exit 1;;
   esac
 done
