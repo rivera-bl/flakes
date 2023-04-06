@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# TODO convert into flake, will be useful to install dependencies
-# TODO make _tmux_send_env_session a system wide function, create library?
-# TODO send ^w zsh function to all panes instead of clear
-# TODO rename input vars context and config
-
 set -e
 KUBECONFIG_BASEPATH="$HOME/.kube"
 
