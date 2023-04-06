@@ -47,6 +47,7 @@ function set_context(){
 function add_cluster(){
   sts=$(aws sts get-caller-identity --region us-east-1 2> /dev/null || true)
   [ -z "$sts" ] && { tmux display-popup -b rounded -E 'fws --login'; }
+  export AWS_PROFILE=$(tmux showenv AWS_PROFILE | cut -d'=' -f2)
 
   cluster=$(aws eks list-clusters --query 'clusters[*]' --output text --region us-east-1 \
     | fzf-tmux -p --border --header "cluster")
