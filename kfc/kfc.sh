@@ -8,6 +8,15 @@
 set -e
 KUBECONFIG_BASEPATH="$HOME/.kube"
 
+function help_(){
+  echo -e "Usage: $0 [-c] [-r] [-h]\n
+Options:
+  -c\tSet \$KUBECONFIG to \"~/.kube/\${selection}\". Set \$AWS_PROFILE if EKS cluster
+  -r\tAdd EKS cluster to kubectl config. If no creds call \"fws --login\"
+  -h\tShow this help message"
+}
+[ $# -eq 0 ] && { help_; exit 1; }
+
 function _tmux_send_env_session(){
   tmux setenv $1 $2
   tmux list-panes -s -F '#{pane_id} #{pane_current_command}' \
@@ -47,10 +56,11 @@ function add_cluster(){
   fi
 }
 
-while getopts ":cr" opt; do
+while getopts ":crh" opt; do
   case ${opt} in
     c) set_context;;
     r) add_cluster;;
-    \?) echo "Opción inválida: -$OPTARG" >&2; exit 1;;
+    h) help_;;
+    \?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
   esac
 done
