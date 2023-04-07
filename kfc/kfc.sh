@@ -6,7 +6,7 @@ KUBECONFIG_BASEPATH="$HOME/.kube"
 function help_(){
   echo -e "Usage: $0 [-c] [-r] [-h]\n
 Options:
-  -c\tSet \$KUBECONFIG to \"~/.kube/\${selection}\". Set \$AWS_PROFILE if EKS cluster
+  -c\tTmux setenv \$KUBECONFIG to \"~/.kube/\${selection}\". Set \$AWS_PROFILE if EKS cluster
   -r\tAdd EKS cluster to kubectl config. If no creds call \"fws --login\"
   -h\tShow this help message"
 }
