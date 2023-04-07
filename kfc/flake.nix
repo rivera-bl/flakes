@@ -1,3 +1,4 @@
+# https://www.ertt.ca/nix/shell-scripts/
 {
   description = "Set $KUBECONFIG with fzf";
 
