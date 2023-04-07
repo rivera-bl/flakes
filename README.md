@@ -12,13 +12,10 @@ modified_files=$(git diff --name-only HEAD^ HEAD)
 ismodified=false
 for file in $modified_files
 do
-  echo $file
   for path in $paths
   do
-    echo $path
     if [[ $file == $path ]]
     then
-      echo "modified"
       ismodified=true
       break 2
     fi
