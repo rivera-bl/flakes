@@ -10,5 +10,3 @@ cd ~/code/personal/system
 nix flake update
 sudo nixos-rebuild switch --flake ~/code/personal/system/#
 ````
-
-
