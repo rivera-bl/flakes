@@ -23,7 +23,7 @@ function set_awsprofile(){
   # get AWS account from cluster ARN
   ACCOUNT=$(kubectl config view --minify -o jsonpath='{.contexts[].context.cluster}' | \
     cut -d':' -f5)
-  [ -z "$ACCOUNT" ] && exit 1
+  [ -z "$ACCOUNT" ] && exit 0;
   ROLE=$(grep -m 1 -oP "\[profile ${ACCOUNT}_\K[^]]+" ~/.aws/config)
   _tmux_send_env_session AWS_PROFILE ${ACCOUNT}_${ROLE}
 }
@@ -31,15 +31,15 @@ function set_awsprofile(){
 function set_context(){
   menu=$(find ~/.kube/ -maxdepth 1 -not -type d -printf "%f\n" \
             | fzf-tmux -p --border --header "context")
+  [ -z "$menu" ] && exit 0; # not working
   context="$KUBECONFIG_BASEPATH/$menu"
-  if [ ! -z "$context" ]; then
-    _tmux_send_env_session KUBECONFIG $context
-    export KUBECONFIG=$context
-    set_awsprofile $context
-  fi
+  _tmux_send_env_session KUBECONFIG $context
+  export KUBECONFIG=$context
+  set_awsprofile $context
 }
 
 function add_cluster(){
+  # TODO exit if no account is selected
   sts=$(aws sts get-caller-identity --region us-east-1 2> /dev/null || true)
   [ -z "$sts" ] && { tmux display-popup -b rounded -E 'fws --login'; }
   export AWS_PROFILE=$(tmux showenv AWS_PROFILE | cut -d'=' -f2)

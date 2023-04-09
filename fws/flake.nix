@@ -1,3 +1,5 @@
+# # TODO add nix-shell with all pkgs (fzf, poetry)
+# # TODO add docker image
 {
   description = "Application packaged using poetry2nix";
 
@@ -13,7 +15,9 @@
       let
         inherit (poetry2nix.legacyPackages.${system}) mkPoetryApplication;
         pkgs = nixpkgs.legacyPackages.${system};
-      in
+        lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
+        version = builtins.substring 0 8 lastModifiedDate;
+      in rec
       {
         packages = {
           myapp = mkPoetryApplication { projectDir = ./.; };
@@ -23,5 +27,25 @@
         devShells.default = pkgs.mkShell {
           packages = [ poetry2nix.packages.${system}.poetry ];
         };
+
+        packages.docker = let
+          mydocker = self.packages.${system}.default;
+        in
+          pkgs.dockerTools.buildLayeredImage {
+            name = "fws";
+            tag = version;
+            # TODO make tmux optional
+            # Why fzf adds 200mb?
+            # mount .kube/ folder when running
+            contents = [pkgs.findutils
+                        pkgs.fzf
+                        pkgs.bash
+                        packages.myapp];
+            };
+            config = {
+              # Entrypoint = [ "/bin/fws" ];
+              Cmd = ["/bin/fws"];
+              WorkingDir = "/";
+            };
       });
 }
