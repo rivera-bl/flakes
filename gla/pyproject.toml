@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "gla"
+version = "0.1.0"
+description = ""
+authors = ["Pablo Rojas Rivera <pablorojas@cencosud.cl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-gitlab = "^3.14.0"
+
+[tool.poetry.scripts]
+main  = "gla.main:main"
+
+[virtualenvs]
+in-project = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
