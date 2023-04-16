@@ -8,7 +8,7 @@ import gitlab
 GITLAB_SERVER = os.environ.get('GL_SERVER', 'https://gitlab.com')
 GITLAB_TOKEN = os.environ.get('GL_TOKEN')
 cache_path  = '/tmp/gla/projects.csv'
-open = 'wsl-open'
+open_bin = 'wsl-open'
 
 def main():
     if not os.path.isfile(cache_path):
@@ -22,6 +22,10 @@ def main():
         projects = gl.projects.list(all=True)
         csv = "id,ssh_url_to_repo\n"
         for project in projects:
+            # only exclude group if argument is passed
+            if len(sys.argv) == 2:
+                # if string before first '/' of project.path_with_namespace is not argument, then continue to the next iteration
+                if project.path_with_namespace.split('/')[0] != sys.argv[1]: continue
             # print(json.dumps(project.attributes, indent=4, sort_keys=True))
             values = [
                 str(project.id),
@@ -33,7 +37,7 @@ def main():
         with open(cache_path, 'w') as f:
             f.write(csv)
 
-    # use shell column command to convert csv variable into columns and pipe the result to fzf shell command
+    # use shell column command to convert csv into columns and pipe the result to fzf shell command
     csv     = subprocess.Popen(['cat', cache_path], stdout=subprocess.PIPE)
     columns = subprocess.Popen(['column', '-t', '-s,'], stdin=csv.stdout, stdout=subprocess.PIPE)
     fzf     = subprocess.Popen(['fzf',
@@ -62,4 +66,4 @@ def main():
             url = i.replace('open,', '').replace('ssh://git@', 'https://')
             # use regex to remove the port number
             url = re.sub(r':\d+/', '/', url)
-            subprocess.run([open, url])
+            subprocess.run([open_bin, url])
