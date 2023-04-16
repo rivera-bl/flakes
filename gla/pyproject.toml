@@ -12,6 +12,7 @@ python-gitlab = "^3.14.0"
 [tool.poetry.scripts]
 gla  = "gla.main:main"
 
+# necessary for the lsp to take the external dependencies into account
 [virtualenvs]
 in-project = true
 
