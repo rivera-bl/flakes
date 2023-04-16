@@ -10,7 +10,7 @@ python = "^3.10"
 python-gitlab = "^3.14.0"
 
 [tool.poetry.scripts]
-main  = "gla.main:main"
+gla  = "gla.main:main"
 
 [virtualenvs]
 in-project = true
