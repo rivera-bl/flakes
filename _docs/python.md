@@ -39,6 +39,16 @@ nix develop # devshell
 nix run     # run application
 ````
 
+6. lsp
+
+to have lsp support for external dependencies, like boto3 or gitlab
+
+````toml
+# pyproject.toml
+[virtualenvs]
+in-project = true
+````
+
 ## TODO
 
 - [ ] single flake for all scripts? they look the same
