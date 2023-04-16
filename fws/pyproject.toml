@@ -13,6 +13,9 @@ toml = "^0.10.2"
 [tool.poetry.scripts]
 fws  = "fws.main:main"
 
+[virtualenvs]
+in-project = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
