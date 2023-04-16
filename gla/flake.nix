@@ -17,7 +17,7 @@
       in
       {
         packages = {
-          myapp = mkPoetryApplication { projectDir = self; };
+          myapp = mkPoetryApplication { projectDir = ./.; };
           default = self.packages.${system}.myapp;
         };
 

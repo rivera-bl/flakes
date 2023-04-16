@@ -1,17 +1,14 @@
 import os
+import re
 import json
 import subprocess
 import sys
 import gitlab
 
-# TODO multi selection bindings
-# TODO binding clone with namespace (exclude first group)
-# TODO binding open in gitlab
-# TODO binding copy id to clipboard
-
 GITLAB_SERVER = os.environ.get('GL_SERVER', 'https://gitlab.com')
 GITLAB_TOKEN = os.environ.get('GL_TOKEN')
 cache_path  = '/tmp/gla/projects.csv'
+open = 'wsl-open'
 
 def main():
     if not os.path.isfile(cache_path):
@@ -21,15 +18,13 @@ def main():
         gl = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN)
         gl.auth()
 
-        # subprocess.Popen(['column', '-t', '-s,'], input=csv.encode('utf-8'), check=True)
         # projects = gl.projects.list(page=1, per_page=5)
         projects = gl.projects.list(all=True)
-        csv = "id,name,ssh_url_to_repo\n"
+        csv = "id,ssh_url_to_repo\n"
         for project in projects:
             # print(json.dumps(project.attributes, indent=4, sort_keys=True))
             values = [
                 str(project.id),
-                project.name,
                 project.ssh_url_to_repo
             ]
             csv += ','.join(values) + "\n"
@@ -41,10 +36,30 @@ def main():
     # use shell column command to convert csv variable into columns and pipe the result to fzf shell command
     csv     = subprocess.Popen(['cat', cache_path], stdout=subprocess.PIPE)
     columns = subprocess.Popen(['column', '-t', '-s,'], stdin=csv.stdout, stdout=subprocess.PIPE)
-    fzf     = subprocess.Popen(['fzf', '--prompt=projects>', '--min-height=20', '--header-lines=1'], stdin=columns.stdout, stdout=subprocess.PIPE)
-
+    fzf     = subprocess.Popen(['fzf',
+                                '--prompt=projects>',
+                                "--header=\ enter: clone \ ctrl-o: open \\",
+                                '--min-height=20',
+                                '--header-lines=1',
+                                '--multi',
+                                '--bind=enter:execute-multi(echo -n clone,{2})+abort',
+                                '--bind=ctrl-o:execute(echo -n open,{2})+abort'
+                                ], stdin=columns.stdout, stdout=subprocess.PIPE)
     selraw = fzf.stdout.read()
-    if not selraw:
-        exit()
+    if not selraw: exit()
+    sel = selraw.decode('utf-8').split()
 
-    print(selraw.decode('utf-8'))
+    if sel[0].startswith('clone'):
+        for i in sel:
+            url = i.replace('clone,', '')
+            dir = url.replace('.git', '')
+            for i in range(4):
+                dir = dir[dir.find('/')+1:]
+            # git clone sel into home user directory + code/gitlab + dir
+            subprocess.run(['git', 'clone', url, os.path.expanduser('~/code/gitlab/') + dir])
+    elif sel[0].startswith('open'):
+        for i in sel:
+            url = i.replace('open,', '').replace('ssh://git@', 'https://')
+            # use regex to remove the port number
+            url = re.sub(r':\d+/', '/', url)
+            subprocess.run([open, url])
