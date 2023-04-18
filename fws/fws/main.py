@@ -49,14 +49,16 @@ def main():
 
 def login(sso_session):
     # login
-    tmux_session_setenv("AWS_PROFILE", sso_session)
-    loggedin = subprocess.run(['aws', 'sts', 'get-caller-identity'], capture_output=True)
+    if subprocess.call("which tmux >/dev/null 2>&1", shell=True) == 0:
+        tmux_session_setenv("AWS_PROFILE", sso_session)
+    loggedin = subprocess.run(['aws', 'sts', 'get-caller-identity', '--profile', sso_session], capture_output=True)
     if loggedin.returncode == 0:
         print("\nYou are already authenticated with " + sso_session + "!")
         time.sleep(1)
         exit()
 
     os.system('aws sso login --no-browser --profile ' + sso_session)
+    print('\nUse this profile with `export AWS_PROFILE=' + sso_session + '`')
 
 def tmux_session_setenv(envar, sso_session):
     if shutil.which('tmux') is not None:
