@@ -2,7 +2,7 @@
 
 ![fws](../_docs/images/fws.png "Image")
 
-```
+```bash
 $ nix run "github:rivera-bl/flakes?dir=fws"
 
 usage: main [-h] [-o] [-l]
@@ -17,4 +17,7 @@ options:
                automaticamente la función de --load, para obtener la lista de cuentas
 ```
 
-`nix run --refresh "github:rivera-bl/flakes?dir=fws" -- --login`
+````bash
+$ aws --version                                                                                                                                                    4s
+aws-cli/2.11.6 Python/3.10.10 Linux/5.15.90.1-microsoft-standard-WSL2 source/x86_64.nixos.23 prompt/off
+````
