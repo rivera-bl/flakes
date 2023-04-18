@@ -18,6 +18,6 @@ options:
 ```
 
 ````bash
-$ aws --version                                                                                                                                                    4s
+$ aws --version
 aws-cli/2.11.6 Python/3.10.10 Linux/5.15.90.1-microsoft-standard-WSL2 source/x86_64.nixos.23 prompt/off
 ````
