@@ -44,7 +44,8 @@ function add_cluster(){
   [ -z "$sts" ] && { tmux display-popup -b rounded -E 'fws --login'; }
   export AWS_PROFILE=$(tmux showenv AWS_PROFILE | cut -d'=' -f2)
 
-  cluster=$(aws eks list-clusters --query 'clusters[*]' --output text --region us-east-1 \
+  cluster=$(echo $(aws eks list-clusters --query 'clusters[*]' --output text --region us-east-1) \
+    | tr ' ' '\n' \
     | fzf-tmux -p --border --header "cluster")
   if [ ! -z "${cluster}" ]; then
   aws eks update-kubeconfig \
