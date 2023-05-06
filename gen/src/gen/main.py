@@ -26,15 +26,17 @@ args = parser.parse_args()
 
 def main():
   name = args.name.replace("-", "_").lower()
-  template_poetry(args.dir, name, args.modules)
-
-# template poetry commands,toml
-def template_poetry(dir, name, modules):
-  dir = os.path.join(dir, name)
+  dir = os.path.join(args.dir, name)
   if os.path.exists(dir):
     print("Directory already exists")
     return
 
+  template_poetry(dir, name, args.modules)
+  template_readme(dir, name)
+  template_flake(dir)
+
+# template poetry commands,toml
+def template_poetry(dir, name, modules):
   # new project
   subprocess.run(["poetry", "new", dir, "--src"])
   # add modules
@@ -56,8 +58,6 @@ def template_poetry(dir, name, modules):
   # install project
   subprocess.run(["poetry", "install", "-C", dir])
   template_main(dir, name, modules)
-  template_readme(dir, name)
-  template_flake(dir)
 
 # template main.py
 def template_main(dir, name, modules):
