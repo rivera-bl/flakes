@@ -31,9 +31,9 @@ def main():
 # template poetry commands,toml
 def template_poetry(dir, name, modules):
   dir = os.path.join(dir, name)
-  # if os.path.exists(dir):
-  #   print("Directory already exists")
-  #   return
+  if os.path.exists(dir):
+    print("Directory already exists")
+    return
 
   # new project
   subprocess.run(["poetry", "new", dir, "--src"])
