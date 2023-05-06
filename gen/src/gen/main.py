@@ -42,8 +42,8 @@ def template_poetry(dir, name, modules):
   config["tool"]["poetry"]["scripts"] = {
     'main': name + '.main:main'
   }
-  config['virtualenvs'] = {
-    'in-project': 'true'
+  config["virtualenvs"] = {
+    "in-project": True
   }
   config["tool"]["poetry"]["name"] = name
 
