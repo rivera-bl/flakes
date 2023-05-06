@@ -6,15 +6,15 @@ import toml
 import pkg_resources
 from jinja2 import Template
 
-# TODO main.py template_readme()
-# TODO main.j2 argparse
+# TODO main.py post() flag with tmux neww
+# TODO pre-commit hook update README.md all sections
 # TODO main.j2 prompt()
+# TODO main.py template_readme()
 # # add flags for each section -> overview,run,versions
 # # overview: output $command --help
 # # run: nix,python3,docker
 # # versions: python, poetry, nix, etc
-# TODO main.py post() flag with tmux neww
-# TODO pre-commit hook update README.md all sections
+# TODO main.j2 argparse
 
 dir = "/home/wim/code/personal/flakes"
 
