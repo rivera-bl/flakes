@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "gen"
+version = "0.1.0"
+description = ""
+authors = ["Pablo Rojas Rivera <pablorojas@cencosud.cl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+boto3 = "^1.26.129"
+toml = "^0.10.2"
+
+[tool.poetry.scripts]
+main  = "gen.main:main"
+
+[virtualenvs]
+in-project = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
