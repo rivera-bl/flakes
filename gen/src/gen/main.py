@@ -36,20 +36,16 @@ def template_poetry(dir, name, modules):
   for module in modules:
       subprocess.run(["poetry", "add", module, "-C", dir])
 
-  with open(dir + "/pyproject.toml", "a") as f:
-      f.write("\n")
-
   with open(dir + "/pyproject.toml", "r") as f:
       config = toml.load(f)
 
-  config["tool"]["poetry"]["name"] = name
-
-  config['tool.poetry.scripts'] = {
+  config["tool"]["poetry"]["scripts"] = {
     'main': name + '.main:main'
   }
   config['virtualenvs'] = {
     'in-project': 'true'
   }
+  config["tool"]["poetry"]["name"] = name
 
   # append to pyproject file
   with open(dir + '/pyproject.toml', 'w') as f:
