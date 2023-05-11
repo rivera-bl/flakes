@@ -73,10 +73,11 @@ def template_main(dir, name, modules):
 
 def template_readme(dir, name):
     readme_dir=os.path.join(dir, "README.md")
+    py_version=subprocess.check_output(["python", "--version"]).decode('utf-8')
 
     template_content = pkg_resources.resource_string(__name__, "README.j2").decode()
     template = Template(template_content)
-    file_content = template.render(name=name)
+    file_content = template.render(name=name, python=py_version)
 
     with open(readme_dir, "w") as f:
         f.write(file_content)

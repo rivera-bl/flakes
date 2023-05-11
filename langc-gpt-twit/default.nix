@@ -1,13 +1,14 @@
 with import <nixpkgs> {};
 
-mkShell {
-  name = "test";
+let
+  filePath = builtins.toString ./. + "/requirements.txt";
+  pipModules = builtins.replaceStrings ["\n"] [" "] (builtins.readFile filePath);
+in mkShell {
+  name = "langc-gpt-twit";
   buildInputs = with python3Packages; [ venvShellHook ];
-  venvDir = ".venv310";
-  # fetchPypi not working for us
-  # TODO: get modules from file requirements.txt so we set same version of all pkgs
-  # # pass as variable so they are updated/loaded dynamically
+  venvDir = ".venv-langc-gpt-twit";
   postShellHook = ''
-    pip install openai deeplake langchain tiktoken
+    pip install ${pipModules}
+    set -o vi
   '';
 }
