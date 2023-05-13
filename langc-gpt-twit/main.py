@@ -10,6 +10,7 @@ import re
 import os
 import fnmatch
 
+# TODO include the filenames in a document
 openai_api_key = os.environ["OPENAI_API_KEY"]
 exclude = [
     "**/.git*",
