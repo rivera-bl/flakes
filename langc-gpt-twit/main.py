@@ -18,7 +18,7 @@ exclude = [
     "**/.venv*",
     "**/.direnv"
 ]
-query = "Explain the langc-gpt-twit code. Use examples and show the command to run it locally with nix and python. Use markdown syntax. The code that you will provide is meant to be used as a README.md for a github repository."
+# query = "Explain the langc-gpt-twit code. Use examples and show the command to run it locally with nix and python. Use markdown syntax. The code that you will provide is meant to be used as a README.md for a github repository."
 
 llm = ChatOpenAI(model='gpt-3.5-turbo', openai_api_key=openai_api_key)
 
@@ -46,16 +46,21 @@ for dirpath, dirnames, filenames in os.walk(root_dir):
         except Exception as e:
             pass
 
-# print(f"You have {len(docs)} documents\n")
-# print("------ Start Document ------")
-# print(docs[0].page_content[:300])
+print(f"{len(docs)} documents found.")
+print("Embedding documents...")
 
 # Embed and store them in a docstore. This will make an API call to OpenAI
 docsearch = FAISS.from_documents(docs, embeddings)
 
+print("Ready to search.")
 # Get our retriever ready
 qa = RetrievalQA.from_chain_type(
     llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
 
+if 'query' not in locals() or not query:
+    query = input("Enter your query: ")
+
+print("Running query...")
+
 output = qa.run(query)
-print(output)
+print("\n" + output)
