@@ -1,5 +1,8 @@
 import fnmatch
+import shutil
 import os
+import git
+import re
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 # Model and chain
@@ -12,7 +15,27 @@ from langchain.chains import RetrievalQA
 
 openai_api_key = os.environ["OPENAI_API_KEY"]
 # TODO fetch remote repositories
-root_dir = '/home/wim/code/personal/flakes'
+# TODO include the dir tree layout as text as part of the documents
+location = input(
+    "Enter the location of the files (local path or git repository): ")
+
+# Check if input is a local path
+if os.path.isdir(location):
+    root_dir = location
+    # continue with the rest of the code
+
+# Check if input is a git repository
+elif re.match(r"^(^https:\/\/.*\.git$|^git@.*:.*\.git$)", location):
+    # Clone the git repository to a temporary directory
+    tmp_dir = "/tmp/langc-gpt-repo"
+    git.Repo.clone_from(location, tmp_dir)
+    root_dir = tmp_dir
+
+# Invalid input
+else:
+    print("Invalid input.")
+
+# root_dir = '/home/wim/code/personal/flakes'
 exclude = [
     "**/.git*",
     "**/.venv*",
@@ -31,7 +54,6 @@ embeddings = OpenAIEmbeddings(
 docs = []
 
 # Go through each folder
-# TODO skip .git folder
 for dirpath, dirnames, filenames in os.walk(root_dir):
 
     # Go through each file
@@ -64,3 +86,6 @@ print("Running query...")
 
 output = qa.run(query)
 print("\n" + output)
+
+if 'tmp_dir' in locals():
+    shutil.rmtree(tmp_dir)
