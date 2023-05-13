@@ -57,7 +57,7 @@ def embed_documents(docs):
 
 def run_query(query, qa):
     output = qa.run(query)
-    print("\n" + output)
+    print("\n" + output + "\n")
 
 
 def main():
@@ -72,8 +72,13 @@ def main():
     llm = ChatOpenAI(model='gpt-3.5-turbo', openai_api_key=openai_api_key)
     qa = RetrievalQA.from_chain_type(
         llm=llm, chain_type="stuff", retriever=docsearch.as_retriever())
-    query = input("Enter your query: ")
-    run_query(query, qa)
+    while True:
+        query = input("Enter your query (or 'exit' to quit): ")
+        if query.lower() == 'exit':
+            if os.path.isdir(root_dir):
+                shutil.rmtree(root_dir)
+            break
+        run_query(query, qa)
     if os.path.isdir(root_dir):
         shutil.rmtree(root_dir)
 
