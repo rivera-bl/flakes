@@ -2,7 +2,7 @@
 
 # LangC
 
- Python script that uses LangChain and OpenAI's GPT-3 to answer a question based on a set of documents. It's a powerful tool that can help you quickly find answers to complex questions.
+LangChain and OpenAI's GPT-3 to answer questions based on files from local or git remotes.
 
 ## Overview
 
