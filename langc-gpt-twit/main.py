@@ -11,13 +11,14 @@ from langchain.document_loaders import TextLoader
 from langchain.chains import RetrievalQA
 
 openai_api_key = os.environ["OPENAI_API_KEY"]
+# TODO fetch remote repositories
 root_dir = '/home/wim/code/personal/flakes'
 exclude = [
     "**/.git*",
     "**/.venv*",
     "**/.direnv"
 ]
-query = "Explain what is the goal of the code gla"
+query = "Explain the langc-gpt-twit code. Use examples and show the command to run it locally with nix and python. Use markdown syntax. The code that you will provide is meant to be used as a README.md for a github repository."
 
 llm = ChatOpenAI(model='gpt-3.5-turbo', openai_api_key=openai_api_key)
 
