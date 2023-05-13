@@ -5,9 +5,9 @@ let
   pipModules = builtins.replaceStrings [ "\n" ] [ " " ] (builtins.readFile filePath);
 in
 mkShell {
-  name = "langc-gpt-twit";
+  name = "langc";
   buildInputs = with python3Packages; [ venvShellHook ];
-  venvDir = ".venv-langc-gpt-twit";
+  venvDir = ".venv-langc";
   LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib"; # needed for langchain
   postShellHook = ''
     pip install ${pipModules}
