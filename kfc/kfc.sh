@@ -30,7 +30,8 @@ function set_awsprofile(){
 
 function set_context(){
   menu=$(find ~/.kube/ -maxdepth 1 -not -type d -printf "%f\n" \
-            | fzf-tmux -p --border --header "context")
+            | sort \
+            | fzf-tmux -p --border --prompt "context>")
   [ -z "$menu" ] && exit 0; # not working
   context="$KUBECONFIG_BASEPATH/$menu"
   _tmux_send_env_session KUBECONFIG $context
