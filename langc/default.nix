@@ -11,6 +11,6 @@ mkShell {
   LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib"; # needed for langchain
   postShellHook = ''
     pip install ${pipModules}
-    set -o vi
+    tmux send-keys C-l
   '';
 }
