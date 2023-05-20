@@ -1,5 +1,4 @@
 with import <nixpkgs> { };
-
 let
   filePath = builtins.toString ./. + "/requirements.txt";
   pipModules = builtins.replaceStrings [ "\n" ] [ " " ] (builtins.readFile filePath);
@@ -10,7 +9,9 @@ mkShell {
   venvDir = ".venv-langc";
   LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib"; # needed for langchain
   postShellHook = ''
-    pip install ${pipModules}
-    tmux send-keys C-l
+    pip install -q --disable-pip-version-check ${pipModules}
+    unset KUBECONFIG
+    printf "\033c"
+    echo -e "\n${pipModules}"
   '';
 }
