@@ -9,6 +9,7 @@ mkShell {
   venvDir = ".venv-langc";
   LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib"; # needed for langchain
   postShellHook = ''
+    echo "Installing Pip Modules defined in ${filePath}"
     pip install -q --disable-pip-version-check ${pipModules}
     unset KUBECONFIG
     printf "\033c"
