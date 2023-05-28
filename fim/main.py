@@ -3,13 +3,14 @@ import os
 import csv
 import subprocess
 
-# TODO merge with localhost function
-# TODO convert into a command line tool with help and args
 # TODO fix ecr-credential-helper
-# TODO --bind inspect image (ctrl-v)
+# TODO convert into a command line tool with help and args
+# # merge with localhost function
+# # argument to reload list_ecr_images and open
 # # for this we have to pull the image first
 # TODO add to fzf menu
-# TODO --bind or function to reload list_ecr_images
+# TODO --bind inspect image (ctrl-v)
+# TODO --bind open repository in browser (ctr-o)
 
 def get_account_id():
     try:
@@ -29,19 +30,20 @@ container = "sudo podman"
 registry = f"{account}.dkr.ecr.{region}.amazonaws.com"
 session = boto3.Session(region_name=region) # uses current AWS_PROFILE
 
+# better way to pass commands? escaping is a pain
 command = f"cat {csvfile} \
-        | sed 's/.*\///' \
+        | sed 's/^[^/]*\///' \
         | column -t -s, \
         | fzf --header-lines=1 \
-            --header \"| enter:exec | ctrl-p:pull | ctrl-v:inspect | ctrl-space:preview |\" \
+            --header \"| enter:exec | ctrl-p:pull | ctrl-y:yank | ctrl-space:preview (policy) |\" \
             --prompt=\"{account}>\" \
             --height=100% \
             --multi \
-            --preview-window right,hidden,60% \
+            --preview-window right,hidden,40% \
             --preview \"set -o pipefail \
                        && cut -d':' -f1 <<< {{1}} \
-                       | xargs -I {{}} aws ecr get-repository-policy --repository-name {{}} \
-                       | bat --color=always\" \
+                       | xargs -I {{}} aws ecr get-repository-policy --repository-name {{}} --query 'policyText' --output text | sed -e 's/\\\\\n//g' -e 's/\\\\\//g' | jq -r . \
+                       | bat -l json\" \
             --bind \"ctrl-h:execute-silent(tmux select-pane -L)\" \
               --bind 'ctrl-p:execute-multi({container} pull {registry}/{{1}})' \
               --bind 'ctrl-y:execute-silent(echo {registry}/{{1}} \
