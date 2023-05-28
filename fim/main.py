@@ -5,7 +5,6 @@ import csv
 import subprocess
 import argparse
 
-# TODO merge with localhost function
 # TODO add to nixos and fzf menu
 
 # TODO fix ecr-credential-helper
@@ -25,14 +24,14 @@ def get_account_id():
         sys.exit()
 
 account = get_account_id()
+# account = "817860761669" # faster testing
 region = "us-east-1"
 cache_path = "/tmp/fim"
 csvfile = f"{cache_path}/{account}_images.csv"
 container = "sudo podman"
 registry = f"{account}.dkr.ecr.{region}.amazonaws.com"
-session = boto3.Session(region_name=region) # uses current AWS_PROFILE
+session = boto3.Session(region_name=region)
 
-# better way to pass commands? escaping is a pain
 command_ecr = f"cat {csvfile} \
         | sed 's/^[^/]*\///' \
         | column -t -s, \
@@ -55,6 +54,22 @@ command_ecr = f"cat {csvfile} \
               --bind 'enter:execute({container} run -ti --rm --entrypoint=bash {registry}/{{1}} \
                                     || {container} run -ti --rm --entrypoint=sh {registry}/{{1}})+abort' \
               --bind 'ctrl-space:toggle-preview'"
+
+# """ fixes escaping nightmare
+command_local = f"""{container} images --format '{{{{.Repository}}}}:{{{{.Tag}}}} {{{{.Size}}}} {{{{.ID}}}}' \
+            | column -t \
+            | fzf \
+              --header "| enter:exec | ctrl-d:rmi | ctrl-p:push | ctrl-v:inspect | ctrl-space:preview |" \
+              --prompt="local>" \
+              --height=100% \
+              --multi \
+              --preview-window right,hidden,60% \
+              --preview "{container} inspect {{4}} | bat -l json --color always" \
+                  --bind "ctrl-h:execute-silent(tmux select-pane -L)" \
+                  --bind "ctrl-v:execute({container} inspect {{4}} | nvim -R -c 'set syntax=json')" \
+                  --bind "ctrl-d:execute-multi({container} rmi {{4}} --force)+reload-sync({container} images --format '{{{{.Repository}}}}:{{{{.Tag}}}} {{{{.Size}}}} {{{{.ID}}}}' | column -t)" \
+                  --bind "enter:execute({container} run -ti --rm --entrypoint=bash {{1}} || {container} run -ti --rm --entrypoint=sh {{1}})" \
+                  --bind 'ctrl-space:toggle-preview'"""
 
 # write as csv a list of lists
 def write_csv(csvfile, data):
@@ -122,6 +137,8 @@ def list_ecr_images():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Container Registry actions with fzf')
     parser.add_argument('--load', action='store_true', help=f'Load ECR images into {cache_path}/{{account}}_images.csv')
+    parser.add_argument('--local', action='store_true', help=f'Open LOCAL registry with fzf')
+    parser.add_argument('--ecr', action='store_true', help=f'Open ECR registry with fzf')
     args = parser.parse_args()
 
     if not any(args.__dict__.values()):
@@ -131,4 +148,8 @@ if __name__ == "__main__":
     if not os.path.exists(csvfile) or args.load:
         images = list_ecr_images()
         write_csv(csvfile, images)
-    subprocess.run(command_ecr, shell=True)
+        subprocess.run(command_ecr, shell=True)
+    elif args.local:
+        subprocess.run(command_local, shell=True)
+    elif args.ecr:
+        subprocess.run(command_ecr, shell=True)
