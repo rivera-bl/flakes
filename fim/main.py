@@ -1,22 +1,57 @@
 import boto3
 import os
 import csv
+import subprocess
 
-# TODO set registry as prompt
-# TODO --bind pull (ctrl-p, multi)
-# TODO --bind show permissions of repository (preview)
+# TODO merge with localhost function
+# TODO convert into a command line tool with help and args
+# TODO fix ecr-credential-helper
 # TODO --bind inspect image (ctrl-v)
-# TODO --bind copy URI (enter)
-# show only repositories
-# cat /tmp/fim/images.csv | sed 's/.*\///' | column -t -s, | fzf --header-lines=1
+# # for this we have to pull the image first
+# TODO add to fzf menu
+# TODO --bind or function to reload list_ecr_images
 
-# ---
+def get_account_id():
+    try:
+        sts_client = boto3.client('sts')
+        response = sts_client.get_caller_identity()
+        account_id = response['Account']
+        return account_id
+    except Exception as e:
+        print(f"Error retrieving account ID: {e}")
+        return None
 
-# TODO print information of the actions it is doing
-# TODO use a different name for the local registry with podman, and the ecr registry
+account = get_account_id()
 region = "us-east-1"
 cache_path = "/tmp/fim"
+csvfile = f"{cache_path}/{account}_images.csv"
+container = "sudo podman"
+registry = f"{account}.dkr.ecr.{region}.amazonaws.com"
+session = boto3.Session(region_name=region) # uses current AWS_PROFILE
 
+command = f"cat {csvfile} \
+        | sed 's/.*\///' \
+        | column -t -s, \
+        | fzf --header-lines=1 \
+            --header \"| enter:exec | ctrl-p:pull | ctrl-v:inspect | ctrl-space:preview |\" \
+            --prompt=\"{account}>\" \
+            --height=100% \
+            --multi \
+            --preview-window right,hidden,60% \
+            --preview \"set -o pipefail \
+                       && cut -d':' -f1 <<< {{1}} \
+                       | xargs -I {{}} aws ecr get-repository-policy --repository-name {{}} \
+                       | bat --color=always\" \
+            --bind \"ctrl-h:execute-silent(tmux select-pane -L)\" \
+              --bind 'ctrl-p:execute-multi({container} pull {registry}/{{1}})' \
+              --bind 'ctrl-y:execute-silent(echo {registry}/{{1}} \
+                                    | clip.exe \
+                                    && echo \"Copied {registry}/{{1}} to clipboard\")' \
+              --bind 'enter:execute({container} run -ti --rm --entrypoint=bash {registry}/{{1}} \
+                                    || {container} run -ti --rm --entrypoint=sh {registry}/{{1}})+abort' \
+              --bind 'ctrl-space:toggle-preview'"
+
+# human readable bytes
 def sizeof_fmt(num, suffix='B'):
     # Adapted from https://stackoverflow.com/a/1094933/6465438
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
@@ -25,9 +60,9 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "{:.1f}{}{}".format(num, 'Yi', suffix)
 
+# TODO print information of the actions it is doing
 def list_ecr_images():
     images = []
-    session = boto3.Session(region_name=region)
     ecr_client = session.client('ecr')
 
     response = ecr_client.describe_repositories()
@@ -49,13 +84,14 @@ def list_ecr_images():
                 image_size = image['imageSizeInBytes']
 
                 images.append([image_tag, image_pushed_date, sizeof_fmt(image_size)])
-    # Sort in descending order
+
+    # # By saving as list of list, we can either save to csv, or output as columns from py
+    # Sort in descending order by Pushed date
     sorted_images = sorted(images[1:], key=lambda x: x[1], reverse=True)
     sorted_images.insert(0, ["Image", "Pushed", "Size"])
 
     # TODO move to another function with csv
     # delete csv if already exists
-    csvfile = cache_path + "/images.csv"
     if os.path.exists(csvfile):
         os.remove(csvfile)
 
@@ -72,5 +108,6 @@ def list_ecr_images():
     #     print("  ".join((val.ljust(width) for val, width in zip(row, widths))))
 
 if __name__ == "__main__":
-    list_ecr_images()
-
+    if not os.path.exists(csvfile):
+        list_ecr_images()
+    subprocess.run(command, shell=True)
