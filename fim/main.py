@@ -2,11 +2,11 @@ import boto3
 import os
 import csv
 import subprocess
+import argparse
 
-# TODO fix ecr-credential-helper
 # TODO convert into a command line tool with help and args
 # # merge with localhost function
-# # argument to reload list_ecr_images and open
+# TODO fix ecr-credential-helper
 # # for this we have to pull the image first
 # TODO add to fzf menu
 # TODO --bind inspect image (ctrl-v)
@@ -110,6 +110,14 @@ def list_ecr_images():
     #     print("  ".join((val.ljust(width) for val, width in zip(row, widths))))
 
 if __name__ == "__main__":
-    if not os.path.exists(csvfile):
+    parser = argparse.ArgumentParser(description='Container Registry actions with fzf')
+    parser.add_argument('--load', action='store_true', help=f'Load ECR images into {cache_path}/{{account}}_images.csv')
+    args = parser.parse_args()
+
+    if not any(args.__dict__.values()):
+        parser.print_help()
+        exit()
+
+    if not os.path.exists(csvfile) or args.load:
         list_ecr_images()
     subprocess.run(command, shell=True)
