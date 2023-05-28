@@ -1,15 +1,17 @@
 import boto3
 import os
+import sys
 import csv
 import subprocess
 import argparse
 
-# TODO convert into a command line tool with help and args
-# # merge with localhost function
+# TODO merge with localhost function
+# TODO add to nixos and fzf menu
+
 # TODO fix ecr-credential-helper
-# # for this we have to pull the image first
-# TODO add to fzf menu
+# # or run the sudo podman login as an exception catch
 # TODO --bind inspect image (ctrl-v)
+# # for this we have to pull the image first
 # TODO --bind open repository in browser (ctr-o)
 
 def get_account_id():
@@ -20,7 +22,7 @@ def get_account_id():
         return account_id
     except Exception as e:
         print(f"Error retrieving account ID: {e}")
-        return None
+        sys.exit()
 
 account = get_account_id()
 region = "us-east-1"
@@ -31,7 +33,7 @@ registry = f"{account}.dkr.ecr.{region}.amazonaws.com"
 session = boto3.Session(region_name=region) # uses current AWS_PROFILE
 
 # better way to pass commands? escaping is a pain
-command = f"cat {csvfile} \
+command_ecr = f"cat {csvfile} \
         | sed 's/^[^/]*\///' \
         | column -t -s, \
         | fzf --header-lines=1 \
@@ -42,7 +44,8 @@ command = f"cat {csvfile} \
             --preview-window right,hidden,40% \
             --preview \"set -o pipefail \
                        && cut -d':' -f1 <<< {{1}} \
-                       | xargs -I {{}} aws ecr get-repository-policy --repository-name {{}} --query 'policyText' --output text | sed -e 's/\\\\\n//g' -e 's/\\\\\//g' | jq -r . \
+                       | xargs -I {{}} aws ecr get-repository-policy --repository-name {{}} --query 'policyText' --output text \
+                       | sed -e 's/\\\\\n//g' -e 's/\\\\\//g' | jq -r . \
                        | bat -l json\" \
             --bind \"ctrl-h:execute-silent(tmux select-pane -L)\" \
               --bind 'ctrl-p:execute-multi({container} pull {registry}/{{1}})' \
@@ -53,6 +56,25 @@ command = f"cat {csvfile} \
                                     || {container} run -ti --rm --entrypoint=sh {registry}/{{1}})+abort' \
               --bind 'ctrl-space:toggle-preview'"
 
+# write as csv a list of lists
+def write_csv(csvfile, data):
+    # delete csv if already exists
+    if os.path.exists(csvfile):
+        os.remove(csvfile)
+
+    # save as csv
+    os.makedirs(os.path.dirname(csvfile), exist_ok=True)
+    with open(csvfile, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+    print(f"Images written to {csvfile}.")
+
+# print as columns a list of lists
+def print_columns(data):
+    widths = [max(map(len, col)) for col in zip(*data)]
+    for row in data:
+        print("  ".join((val.ljust(width) for val, width in zip(row, widths))))
+
 # human readable bytes
 def sizeof_fmt(num, suffix='B'):
     # Adapted from https://stackoverflow.com/a/1094933/6465438
@@ -62,52 +84,40 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "{:.1f}{}{}".format(num, 'Yi', suffix)
 
-# TODO print information of the actions it is doing
+# list ecr_images as a list of list
 def list_ecr_images():
     images = []
     ecr_client = session.client('ecr')
 
+    print(f"Retrieving repositories for {registry}...")
     response = ecr_client.describe_repositories()
+    print("Repositories retrieved.")
 
     for repository in response['repositories']:
         repository_name = repository['repositoryName']
 
         image_response = ecr_client.describe_images(repositoryName=repository_name)
+        print(f"Images retrieved for repository: {repository_name}.")
 
         for image in image_response['imageDetails']:
             if 'imageTags' not in image:
                 continue
             image_tags = image['imageTags']
             for tag in image_tags:
-                registry = image['registryId'] + "dkr.ecr." + region + ".amazonaws.com/"
-                image_tag = registry + repository_name + ":" + tag
+                image_tag = f"{registry}/{repository_name}:{tag}"
 
                 image_pushed_date = image['imagePushedAt'].strftime("%Y-%m-%d %H:%M:%S")
                 image_size = image['imageSizeInBytes']
 
                 images.append([image_tag, image_pushed_date, sizeof_fmt(image_size)])
 
-    # # By saving as list of list, we can either save to csv, or output as columns from py
-    # Sort in descending order by Pushed date
+    print("Sorting images by PushedDate ...")
     sorted_images = sorted(images[1:], key=lambda x: x[1], reverse=True)
     sorted_images.insert(0, ["Image", "Pushed", "Size"])
+    print("Images sorted.")
 
-    # TODO move to another function with csv
-    # delete csv if already exists
-    if os.path.exists(csvfile):
-        os.remove(csvfile)
-
-    # save as csv
-    os.makedirs(cache_path, exist_ok=True)
-    with open(csvfile, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(sorted_images)
-
-    # # same as shell 'column -t'
-    # # TODO move to another function
-    # widths = [max(map(len, col)) for col in zip(*sorted_images)]
-    # for row in sorted_images:
-    #     print("  ".join((val.ljust(width) for val, width in zip(row, widths))))
+    # print_columns(sorted_images)
+    return sorted_images
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Container Registry actions with fzf')
@@ -119,5 +129,6 @@ if __name__ == "__main__":
         exit()
 
     if not os.path.exists(csvfile) or args.load:
-        list_ecr_images()
-    subprocess.run(command, shell=True)
+        images = list_ecr_images()
+        write_csv(csvfile, images)
+    subprocess.run(command_ecr, shell=True)
