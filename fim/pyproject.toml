@@ -10,7 +10,7 @@ in-project = true
 name = "fim"
 version = "0.1.0"
 description = ""
-authors = [ "Pablo Rojas Rivera <pablorojas@cencosud.cl>",]
+authors = ["Pablo Rojas Rivera <rivera.pablo1090@gmail.com>"]
 readme = "README.md"
 [[tool.poetry.packages]]
 include = "fim"
@@ -21,4 +21,4 @@ python = "^3.10"
 boto3 = "^1.26.142"
 
 [tool.poetry.scripts]
-main = "fim.main:main"
+fim = "fim.main:main"
