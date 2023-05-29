@@ -5,14 +5,6 @@ import csv
 import subprocess
 import argparse
 
-# TODO add to nixos and fzf menu
-
-# TODO fix ecr-credential-helper
-# # or run the sudo podman login as an exception catch
-# TODO --bind inspect image (ctrl-v)
-# # for this we have to pull the image first
-# TODO --bind open repository in browser (ctr-o)
-
 def get_account_id():
     try:
         sts_client = boto3.client('sts')
