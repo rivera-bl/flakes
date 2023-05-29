@@ -153,5 +153,3 @@ def main():
         subprocess.run(command_local, shell=True)
     elif args.ecr:
         subprocess.run(command_ecr, shell=True)
-
-main()

@@ -49,6 +49,10 @@ to have lsp support for external dependencies, like boto3 or gitlab
 in-project = true
 ````
 
+## NOTES
+
+- When packaging in nixos configuration, apparently the pkg gets the name of the run script?
+
 ## TODO
 
 - [ ] single flake for all scripts? they look the same
