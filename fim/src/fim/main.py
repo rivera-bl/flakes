@@ -129,20 +129,26 @@ def list_ecr_images():
 
 def main():
     parser = argparse.ArgumentParser(description='Container Registry actions with fzf')
-    parser.add_argument('--load', action='store_true', help=f'Load ECR images into {cache_path}/{{account}}_images.csv')
-    parser.add_argument('--local', action='store_true', help=f'Open LOCAL registry with fzf')
-    parser.add_argument('--ecr', action='store_true', help=f'Open ECR registry with fzf')
+    parser.add_argument('--load', action='store_true', help=f'Load ECR images into `{cache_path}/{{account}}_images.csv`')
+    parser.add_argument('--local', action='store_true', help=f'Open `local` registry with fzf')
+    parser.add_argument('--ecr', action='store_true', help=f'Open `ecr` registry with fzf')
     args = parser.parse_args()
 
     if not any(args.__dict__.values()):
         parser.print_help()
         exit()
 
-    if not os.path.exists(csvfile) or args.load:
+    if args.load:
+        if os.path.exists(csvfile):
+            print(f"Refreshing cache file {csvfile}.")
         images = list_ecr_images()
         write_csv(csvfile, images)
         subprocess.run(command_ecr, shell=True)
     elif args.local:
         subprocess.run(command_local, shell=True)
     elif args.ecr:
+        if not os.path.exists(csvfile):
+            print(f"Cache file {csvfile} not found.")
+            images = list_ecr_images()
+            write_csv(csvfile, images)
         subprocess.run(command_ecr, shell=True)
