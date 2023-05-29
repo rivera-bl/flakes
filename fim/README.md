@@ -7,9 +7,9 @@ Container Registry actions with fzf
 
 options:
   -h, --help  show this help message and exit
-  --load      Load ECR images into /tmp/fim/{account}_images.csv
-  --local     Open LOCAL registry with fzf
-  --ecr       Open ECR registry with fzf
+  --load      Load ECR images into `/tmp/fim/{account}_images.csv`
+  --local     Open `local` registry with fzf
+  --ecr       Open `ecr` registry with fzf
 ````
 
 ## TODO
