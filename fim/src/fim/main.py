@@ -60,6 +60,7 @@ command_local = f"""{container} images --format '{{{{.Repository}}}}:{{{{.Tag}}}
                   --bind "ctrl-h:execute-silent(tmux select-pane -L)" \
                   --bind "ctrl-v:execute({container} inspect {{4}} | nvim -R -c 'set syntax=json')" \
                   --bind "ctrl-d:execute-multi({container} rmi {{4}} --force)+reload-sync({container} images --format '{{{{.Repository}}}}:{{{{.Tag}}}} {{{{.Size}}}} {{{{.ID}}}}' | column -t)" \
+                  --bind 'ctrl-p:execute-multi({container} push {{1}})' \
                   --bind "enter:execute({container} run -ti --rm --entrypoint=bash {{1}} || {container} run -ti --rm --entrypoint=sh {{1}})" \
                   --bind 'ctrl-space:toggle-preview'"""
 
