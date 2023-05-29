@@ -42,7 +42,7 @@
                         packages.myapp];
             };
             config = {
-              # Entrypoint = [ "/bin/fws" ];
+              Entrypoint = [ "/bin/fws" ];
               Cmd = ["/bin/fws"];
               WorkingDir = "/";
             };

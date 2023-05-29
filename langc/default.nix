@@ -11,8 +11,8 @@ mkShell {
   postShellHook = ''
     echo "Installing Pip Modules defined in ${filePath}"
     pip install -q --disable-pip-version-check ${pipModules}
+    echo -e "${pipModules}"
     unset KUBECONFIG
     printf "\033c"
-    echo -e "\n${pipModules}"
   '';
 }

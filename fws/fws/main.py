@@ -57,10 +57,11 @@ def login(sso_session):
         tmux_session_setenv("AWS_PROFILE", sso_session)
     loggedin = subprocess.run(
         ['aws', 'sts', 'get-caller-identity', '--profile', sso_session], capture_output=True)
-    if loggedin.returncode == 0:
-        print("\nYou are already authenticated with " + sso_session + "!")
-        time.sleep(1)
-        exit()
+    # TODO fix this! sometimes false positive
+    # if loggedin.returncode == 0:
+    #     print("\nYou are already authenticated with " + sso_session + "!")
+    #     time.sleep(1)
+    #     exit()
 
     os.system('aws sso login --no-browser --profile ' + sso_session)
     print('\nUse this profile with `export AWS_PROFILE=' + sso_session + '`')

@@ -10,6 +10,9 @@ GITLAB_TOKEN = os.environ.get('GL_TOKEN')
 cache_path  = '/tmp/gla/projects.csv'
 open_bin = 'wsl-open'
 
+# TODO: Refactor to json, to use headers for setting a date of last imported/updated
+# TODO: Jump to repo when finished downloading
+# TODO: Add options: -l -> for import/update on command, -e -> for execute (default)
 def main():
     if not os.path.isfile(cache_path):
         if not GITLAB_TOKEN:
