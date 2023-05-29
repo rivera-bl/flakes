@@ -14,9 +14,8 @@ options:
 
 ## TODO
 
+- [ ] !!run get_account_id only when --ecr
 - [ ] fix ecr-credential-helper
-  - or run the sudo podman login as an exception catch
+  - or run the {container} login as an exception catch
 - [ ] --bind inspect image (ctrl-v)
   - for this we have to pull the image first
-- [ ] --bind open repository in browser (ctr-o)
-- [ ] run get_account_id only when --ecr
