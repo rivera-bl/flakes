@@ -13,6 +13,10 @@ open_bin = 'wsl-open'
 # TODO: Refactor to json, to use headers for setting a date of last imported/updated
 # TODO: Jump to repo when finished downloading
 # TODO: Add options: -l -> for import/update on command, -e -> for execute (default)
+# TODO: don't show in output the server url, just the repository path
+# TODO: --preview to describe repository
+# TODO: --preview to get vars
+# TODO: command to watch pipeline
 def main():
     if not os.path.isfile(cache_path):
         if not GITLAB_TOKEN:
