@@ -1,0 +1,43 @@
+import boto3
+
+def main():
+    # Create an EC2 client
+    ec2_client = boto3.client('ec2')
+
+    # Call the describe_instances() method to retrieve information about EC2 instances
+    response = ec2_client.describe_instances()
+
+    # Prepare the header for the instance information
+    header = "Name,Instance ID,State,Instance Type,Image ID,Private IP,Public IP,Key Name,Launch Time,Availability Zone,Subnet ID,VPC ID"
+
+    # Prepare a list to store the instance details
+    instances_info = []
+
+    # Iterate over reservations and instances to store instance details
+    for reservation in response['Reservations']:
+        for instance in reservation['Instances']:
+            instance_id = instance['InstanceId']
+            instance_state = instance['State']['Name']
+            instance_type = instance['InstanceType']
+            image_id = instance['ImageId']
+            private_ip = instance['PrivateIpAddress']
+            public_ip = 'yes' if 'PublicIpAddress' in instance else ' '
+            launch_time = instance['LaunchTime'].strftime('%Y-%m-%d %H:%M:%S')
+            availability_zone = instance['Placement']['AvailabilityZone']
+            subnet_id = instance['SubnetId']
+            vpc_id = instance['VpcId']
+            tag_name = ""
+        
+            # Iterate over tags to find the tag with key "Name"
+            for tag in instance.get('Tags', []):
+                if tag['Key'] == 'Name':
+                    tag_name = tag['Value']
+                    break
+            
+            instance_info = f"{tag_name},{instance_id},{instance_state},{instance_type},{image_id},{private_ip},{public_ip},{launch_time},{availability_zone},{subnet_id},{vpc_id}"
+            instances_info.append(instance_info)
+    # Combine the header and instance information with commas
+    result = header + '\n' + '\n'.join(instances_info)
+
+    # return result
+    print(result)

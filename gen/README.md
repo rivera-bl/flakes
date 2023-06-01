@@ -10,6 +10,7 @@ dir is optional
 cd /home/wim/code/personal/flakes/gen
 poetry run main --name {myproj} --modules boto3
 cd /home/wim/code/personal/flakes/{myproj}
+# change the name of the script to {myproj} first
 poetry install
-poetry run main
+poetry run {myproj}
 ````

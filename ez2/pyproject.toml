@@ -1,0 +1,24 @@
+
+[build-system]
+requires = [ "poetry-core",]
+build-backend = "poetry.core.masonry.api"
+
+[virtualenvs]
+in-project = true
+
+[tool.poetry]
+name = "ez2"
+version = "0.1.0"
+description = ""
+authors = [ "Pablo Rojas Rivera <pablorojas@cencosud.cl>",]
+readme = "README.md"
+[[tool.poetry.packages]]
+include = "ez2"
+from = "src"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+boto3 = "^1.26.143"
+
+[tool.poetry.scripts]
+ez2 = "ez2.main:main"
