@@ -5,6 +5,7 @@ import csv
 import os
 import sys
 
+# TODO --bind to get logs
 # TODO --bind to get all the policies attached to an instance profile (usually the instance profile name is the same as the role name)
 # # aws ec2 describe-instances --instance-ids YOUR_INSTANCE_ID --query 'Reservations[].Instances[].IamInstanceProfile.Arn' --output text
 # # aws iam list-attached-role-policies --role-name YOUR_ROLE_NAME
