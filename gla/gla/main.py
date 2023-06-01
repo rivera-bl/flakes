@@ -5,10 +5,14 @@ import gitlab
 import csv
 import argparse
 
+# TODO change dir after cloning
+# TODO describe repo preview and open with vi
+
 GITLAB_SERVER = os.environ.get('GL_SERVER', 'https://gitlab.com')
 GITLAB_TOKEN = os.environ.get('GL_TOKEN')
 cache_path = '/tmp/gla/projects.csv'
 open_bin = 'wsl-open'
+basedir = os.path.expanduser('~/code/gitlab')
 
 def get_projects():
     if not GITLAB_TOKEN:
@@ -17,7 +21,7 @@ def get_projects():
     gl = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN)
     gl.auth()
 
-    projects = gl.projects.list(per_page=7, all=False)
+    projects = gl.projects.list(all=True)
     project_list = []
 
     # Add the header to the project_list
@@ -28,6 +32,22 @@ def get_projects():
         project_info = [str(project.id), project.ssh_url_to_repo]
         project_list.append(project_info)
     return project_list
+
+def get_ssh_and_web_hosts(cache_path):
+    with open(cache_path, 'r') as file:
+        reader = csv.reader(file)
+        rows = list(reader)
+        sshurl = rows[1][1]
+
+    # Get the ssh host part
+    sshhost = "/".join(sshurl.split("/")[:3])
+
+    # Get the web host part
+    first_at_index = sshurl.index("@")
+    second_colon_index = sshurl.index(":", first_at_index + 1)
+    webhost = f"https://{sshurl[first_at_index + 1:second_colon_index]}"
+
+    return sshhost, webhost
 
 def write_csv(project_list):
     os.makedirs(os.path.dirname(cache_path), exist_ok=True)
@@ -40,6 +60,12 @@ def main():
     parser.add_argument('--load', action='store_true', help=f'Load projects into {cache_path}')
     args = parser.parse_args()
 
+    if args.load or not os.path.isfile(cache_path):
+        projects = get_projects()
+        write_csv(projects)
+
+    sshhost, webhost = get_ssh_and_web_hosts(cache_path)
+
     command = f"""cat {cache_path} \
                  | sed 's/,[^,]*\/\/[^\/]*\//,/; s/\.[^.]*$//'  \
                  | column -t -s, \
@@ -47,15 +73,14 @@ def main():
                     --header "| enter:clone | ctrl-o:open |" \
                     --prompt="projects>"\
                     --height=80% \
+                    --multi \
                     --preview-window right,hidden,60% \
                     --preview "aws ec2 describe-instances --instance-ids {{1}} | bat -l json --color always" \
+                        --bind "enter:execute(git clone {sshhost}/{{2}}.git {basedir}/{{2}})" \
+                        --bind "ctrl-o:execute-silent({open_bin} {webhost}/{{2}})+abort" \
                         --bind "ctrl-h:execute-silent(tmux select-pane -L)" \
                         --bind 'ctrl-space:toggle-preview'
                  """
-
-    if args.load or not os.path.isfile(cache_path):
-        projects = get_projects()
-        write_csv(projects)
 
     subprocess.run(command, shell=True)
 
