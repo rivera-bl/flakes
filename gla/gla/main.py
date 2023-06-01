@@ -21,6 +21,7 @@ def get_projects():
     gl = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN)
     gl.auth()
 
+    print(f"Retrieving projects from {GITLAB_SERVER}..")
     projects = gl.projects.list(all=True)
     project_list = []
 
