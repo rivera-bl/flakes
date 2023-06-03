@@ -11,6 +11,7 @@ import os
 import fnmatch
 
 # TODO include the filenames in a document
+# TODO 
 openai_api_key = os.environ["OPENAI_API_KEY"]
 exclude = [
     "**/.git*",
@@ -24,7 +25,7 @@ def get_location():
         "Enter the location of the files (local path or git repository): ")
     if os.path.isdir(location):
         return location
-    elif re.match(r"^(^https:\/\/.*\.git$|^git@.*:.*\.git$)", location):
+    elif re.match(r"^(^https:\/\/.*\.git$|^ssh://git@.*:.*\.git$)", location):
         tmp_dir = "/tmp/langc-gpt-repo"
         git.Repo.clone_from(location, tmp_dir)
         return tmp_dir
