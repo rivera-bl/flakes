@@ -153,8 +153,8 @@ def fetch_dockerhub_tags(image_name):
 def main():
     parser = argparse.ArgumentParser(description='Container Registry actions with fzf')
     parser.add_argument('--load', action='store_true', help=f'Load ECR images into `{cache_path}/{{account}}_images.csv`')
-    parser.add_argument('--local', action='store_true', help=f'Open `local` registry with fzf')
-    parser.add_argument('--ecr', action='store_true', help=f'Open `ecr` registry with fzf')
+    parser.add_argument('--local', action='store_true', help=f'Fetch `local` registry with fzf')
+    parser.add_argument('--ecr', action='store_true', help=f'Fetch `ecr` registry with fzf')
     parser.add_argument('--dockerhub', type=str, metavar='IMAGE_NAME', help='Fetch tags for a DockerHub image')
     args = parser.parse_args()
 
