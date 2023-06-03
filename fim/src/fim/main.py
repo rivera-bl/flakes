@@ -7,6 +7,7 @@ import argparse
 import requests
 
 # TODO only run get_account_id for --ecr
+# TODO run command should go with tmux send-keys for passing arguments
 def get_account_id():
     try:
         sts_client = boto3.client('sts')
@@ -129,7 +130,10 @@ def list_ecr_images():
 
 def fetch_dockerhub_tags(image_name):
     try:
-        url = f"https://hub.docker.com/v2/repositories/library/{image_name}/tags/?page_size=100"
+        if '/' in image_name:
+            url = f"https://hub.docker.com/v2/repositories/{image_name}/tags/?page_size=100"
+        else:
+            url = f"https://hub.docker.com/v2/repositories/library/{image_name}/tags/?page_size=100"
         response = requests.get(url)
         response.raise_for_status()
         tags_data = response.json()
