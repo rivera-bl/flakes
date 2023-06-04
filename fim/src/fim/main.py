@@ -26,8 +26,6 @@ container = "sudo podman"
 registry = f"{account}.dkr.ecr.{region}.amazonaws.com"
 session = boto3.Session(region_name=region)
 
-
-
 # # shows policy
 # --preview \"set -o pipefail \
 #            && cut -d':' -f1 <<< {{1}} \
