@@ -5,8 +5,6 @@ from resource_schemas import resource_schemas
 
 # TODO provider and version as arguments
 # TODO --bind go back to selection of resource_schemas
-# terraform import aws_lambda_function.backend LambdaRDSTest
-# terraform state show aws_lambda_function.consul_backup_test > imports.tf
 
 providers = '''terraform {
   required_providers {
