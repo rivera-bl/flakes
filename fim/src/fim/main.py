@@ -18,12 +18,12 @@ def get_account_id():
         print(f"Error retrieving account ID: {e}")
         sys.exit()
 
-account = get_account_id()
 region = "us-east-1"
 cache_path = "/tmp/fim"
+account = get_account_id()
 csvfile = f"{cache_path}/{account}_images.csv"
-container = "sudo podman"
 registry = f"{account}.dkr.ecr.{region}.amazonaws.com"
+container = "sudo podman"
 session = boto3.Session(region_name=region)
 
 # # shows policy

@@ -1,0 +1,24 @@
+
+[build-system]
+requires = [ "poetry-core",]
+build-backend = "poetry.core.masonry.api"
+
+[virtualenvs]
+in-project = true
+
+[tool.poetry]
+name = "eve"
+version = "0.1.0"
+description = ""
+authors = [ "Pablo Rojas Rivera <pablorojas@cencosud.cl>",]
+readme = "README.md"
+[[tool.poetry.packages]]
+include = "eve"
+from = "src"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+boto3 = "^1.26.149"
+
+[tool.poetry.scripts]
+eve = "eve.main:main"

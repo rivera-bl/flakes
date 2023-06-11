@@ -5,7 +5,7 @@ let
 in
 mkShell {
   name = "";
-  buildInputs = with python3Packages; [ venvShellHook ];
+  buildInputs = [ python3Packages.venvShellHook graphviz ];
   venvDir = ".venv-tport";
   postShellHook = ''
     echo "Installing Pip Modules defined in ${filePath}"
