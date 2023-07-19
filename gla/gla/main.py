@@ -8,8 +8,8 @@ import argparse
 # TODO change dir after cloning
 # TODO describe repo preview and open with vi
 
-GITLAB_SERVER = os.environ.get('GL_SERVER', 'https://gitlab.com')
-GITLAB_TOKEN = os.environ.get('GL_TOKEN')
+GITLAB_SERVER = os.environ.get('GITLAB_SERVER', 'https://gitlab.com')
+GITLAB_TOKEN = os.environ.get('GITLAB_TOKEN')
 cache_path = '/tmp/gla/projects.csv'
 open_bin = 'wsl-open'
 basedir = os.path.expanduser('~/code/gitlab')
