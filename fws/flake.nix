@@ -13,7 +13,7 @@
   outputs = { self, nixpkgs, flake-utils, poetry2nix }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        inherit (poetry2nix.legacyPackages.${system}) mkPoetryApplication;
+        inherit (import poetry2nix { inherit pkgs; }) mkPoetryApplication;
         pkgs = nixpkgs.legacyPackages.${system};
         lastModifiedDate = self.lastModifiedDate or self.lastModified or "19700101";
         version = builtins.substring 0 8 lastModifiedDate;
