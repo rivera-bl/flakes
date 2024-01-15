@@ -16,7 +16,8 @@ openai_api_key = os.environ["OPENAI_API_KEY"]
 exclude = [
     "**/.git*",
     "**/.venv*",
-    "**/.direnv"
+    "**/.direnv",
+    "**/__pycache__"
 ]
 
 

@@ -21,7 +21,7 @@
     in {
       packages.default = pkgs.buildGoModule rec {
         pname = "iamlive";
-        version = "v0.52.0";
+        version = "v1.1.6";
 
         src = pkgs.fetchFromGitHub {
           owner = "iann0036";
