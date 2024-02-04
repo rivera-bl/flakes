@@ -27,7 +27,7 @@
           owner = "iann0036";
           repo = pname;
           rev = version;
-          sha256 = "sha256-aTcateRe5dsSRAnLo3g4tFshuZ6nfC75er7iBGGqe0E=";
+          sha256 = "sha256-nVeFA2PVCkqegG5QSct+SGNRCQYCVJVaOh4HHTs2It0=";
         };
 
         vendorSha256 = null;
