@@ -21,7 +21,7 @@
     in {
       packages.default = pkgs.buildGoModule rec {
         pname = "iamlive";
-        version = "v1.1.6";
+        version = "v1.1.12";
 
         src = pkgs.fetchFromGitHub {
           owner = "iann0036";
@@ -30,6 +30,7 @@
           sha256 = "sha256-nVeFA2PVCkqegG5QSct+SGNRCQYCVJVaOh4HHTs2It0=";
         };
 
+        vendorHash = null;
         vendorSha256 = null;
       };
 
