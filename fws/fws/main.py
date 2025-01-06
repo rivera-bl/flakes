@@ -63,7 +63,7 @@ def login(sso_session):
     #     time.sleep(1)
     #     exit()
 
-    os.system('aws sso login --no-browser --profile ' + sso_session)
+    os.system('aws sso login --profile ' + sso_session)
     print('\nUse this profile with `export AWS_PROFILE=' + sso_session + '`')
 
 
