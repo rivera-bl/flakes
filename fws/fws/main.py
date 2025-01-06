@@ -99,7 +99,7 @@ def accounts():
         token = data['accessToken']
 
     # list accounts
-    accountsraw = client.list_accounts(accessToken=token, maxResults=100)
+    accountsraw = client.list_accounts(accessToken=token, maxResults=1000)
 
     # format to ',' separated strings
     accounts = "accountId,roleName,accountName,emailAddress\n"
