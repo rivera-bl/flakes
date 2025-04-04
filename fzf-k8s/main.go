@@ -133,18 +133,27 @@ func main() {
 		namespace := parts[0]
 		podName := parts[1]
 
-		fmt.Printf("Fetching logs for pod %s in namespace %s...\n", podName, namespace)
-
-		// Execute kubectl logs -f
-		logsCmd := exec.Command("kubectl", "logs", "-f", podName, "-n", namespace)
-		logsCmd.Stdout = os.Stdout // Stream logs directly to terminal stdout
-		logsCmd.Stderr = os.Stderr // Stream errors directly to terminal stderr
-
-		err = logsCmd.Run() // Run the command and wait for it to complete
-		if err != nil {
-			// Log the error, but don't necessarily exit with Fatalf,
-			// as kubectl logs might return non-zero exit code for valid reasons (e.g., pod terminated)
-			log.Printf("kubectl logs command finished with error: %v", err)
+		// Check if running inside tmux
+		if os.Getenv("TMUX") == "" {
+			log.Fatalf("Error: Not running inside a tmux session. Cannot use send-keys.")
 		}
+
+		// fmt.Printf("Sending 'kubectl logs -f %s -n %s' to current tmux pane...\n", podName, namespace)
+
+		// Construct the kubectl command string
+		kubectlCmdStr := fmt.Sprintf("kubectl logs -f %s -n %s", podName, namespace)
+
+		// Execute tmux send-keys
+		// Omitting -t sends to the current pane by default
+		// C-m sends the Enter key
+		tmuxCmd := exec.Command("tmux", "send-keys", "-t", "bottom-right", kubectlCmdStr, "C-m")
+		tmuxCmd.Stdout = os.Stdout // Show tmux command output (if any)
+		tmuxCmd.Stderr = os.Stderr // Show tmux command errors
+
+		err = tmuxCmd.Run() // Run the command and wait for it to complete
+		if err != nil {
+			log.Fatalf("Failed to execute tmux send-keys: %v", err)
+		}
+		// fmt.Println("Command sent to tmux.")
 	}
 }
