@@ -1,103 +1,150 @@
 package main
 
 import (
-	"context"
+	"bytes"
 	"fmt"
+	"context" // Required for client-go operations
+	"io"
 	"log"
 	"os"
-	"path/filepath"
+	"os/exec"
+	"strings"
 
-	fuzzyfinder "github.com/ktr0731/go-fuzzyfinder"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time" // Import the time package for timeout
-
-	// Note: Duplicate imports removed below
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	// Recommended for GCP/Azure/etc authentication
-	// _ "k8s.io/client-go/plugin/pkg/client/auth"
+	// Uncomment the following line if running inside a cluster
+	// "k8s.io/client-go/rest"
 )
 
-// PodInfo holds basic information about a Kubernetes pod
-type PodInfo struct {
-	Namespace string
-	Name      string
-}
-
-// String returns a string representation for display in the fuzzy finder
-func (p PodInfo) String() string {
-	return fmt.Sprintf("%s/%s", p.Namespace, p.Name)
-}
-
 func main() {
-	// --- Kubernetes Client Setup ---
-	kubeconfig := os.Getenv("KUBECONFIG")
-	if kubeconfig == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			log.Fatalf("Error getting user home directory: %v\n", err)
-		}
-		kubeconfig = filepath.Join(home, ".kube", "config")
-	}
+	// 1. Setup Kubernetes client
+	// Get kubeconfig path from environment variable KUBECONFIG
+	kubeconfigPath := os.Getenv("KUBECONFIG")
+	// If KUBECONFIG is not set, kubeconfigPath will be "",
+	// and BuildConfigFromFlags will use default loading rules (~/.kube/config)
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	// Build configuration using the explicit path from KUBECONFIG env var,
+	// or default rules if KUBECONFIG is not set.
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath) // "" for masterUrl, kubeconfigPath from env or ""
 	if err != nil {
-		log.Fatalf("Error building kubeconfig: %v\n", err)
+		// Fallback: try in-cluster config if loading fails
+		// log.Printf("Could not load kubeconfig from path '%s': %v. Trying in-cluster config.", kubeconfigPath, err)
+		// config, err = rest.InClusterConfig()
+		// if err != nil {
+		log.Fatalf("Failed to configure Kubernetes client: %v", err)
+		// }
 	}
 
+	// Create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("Error creating Kubernetes client: %v\n", err)
+		log.Fatalf("Failed to create Kubernetes clientset: %v", err)
 	}
 
-	// --- List Pods ---
-	log.Println("Attempting to fetch pods from all namespaces...") // Added log
-	// Create a context with a timeout (e.g., 30 seconds)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel() // Ensure the context is cancelled to release resources
-
-	pods, err := clientset.CoreV1().Pods("").List(ctx, v1.ListOptions{})
+	// 2. List pods using the client
+	pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		log.Fatalf("Error listing pods: %v\n", err) // This will now trigger on timeout as well
+		log.Fatalf("Failed to list pods: %v", err)
 	}
-	log.Println("Successfully fetched pods.") // Added log
 
 	if len(pods.Items) == 0 {
-		fmt.Println("No pods found in any namespace.")
-		return
+		log.Fatalf("No pods found in the cluster.")
 	}
 
-	// --- Prepare Data for Fuzzy Finder ---
-	podInfos := make([]PodInfo, len(pods.Items))
-	for i, pod := range pods.Items {
-		podInfos[i] = PodInfo{
-			Namespace: pod.Namespace,
-			Name:      pod.Name,
+	// 3. Format pod list for fzf
+	var podListBuffer bytes.Buffer
+	for _, pod := range pods.Items {
+		// Format: NAMESPACE NAME
+		_, err := fmt.Fprintf(&podListBuffer, "%s %s\n", pod.Namespace, pod.Name)
+		if err != nil {
+			log.Fatalf("Failed to write pod info to buffer: %v", err)
 		}
 	}
-	log.Println("Preparing data for fuzzy finder...") // Added log
+	podListBytes := podListBuffer.Bytes() // Use bytes directly
 
-	// --- Run Fuzzy Finder ---
-	log.Println("Starting fuzzy finder...") // Added log
-	idx, err := fuzzyfinder.Find(
-		podInfos,
-		func(i int) string {
-			// Use the String() method we defined for PodInfo
-			return podInfos[i].String()
-		},
-		fuzzyfinder.WithHeader("Select a Pod (Namespace/Name):"),
-	)
+	// 4. Setup fzf command
+	fzfCmd := exec.Command("fzf")
 
-	// Handle potential errors (e.g., user pressing Esc)
+	// Get pipes for stdin and stdout
+	fzfInPipe, err := fzfCmd.StdinPipe()
 	if err != nil {
-		if err == fuzzyfinder.ErrAbort {
-			fmt.Println("No pod selected.")
-			os.Exit(0)
-		}
-		log.Fatalf("Error running fuzzy finder: %v\n", err)
+		log.Fatalf("Failed to get stdin pipe for fzf: %v", err)
+	}
+	fzfOutPipe, err := fzfCmd.StdoutPipe()
+	if err != nil {
+		log.Fatalf("Failed to get stdout pipe for fzf: %v", err)
 	}
 
-	// --- Display Selection ---
-	selectedPod := podInfos[idx]
-	fmt.Printf("You selected: %s/%s\n", selectedPod.Namespace, selectedPod.Name)
+	// Set stderr to os.Stderr to show fzf UI errors and allow interaction
+	fzfCmd.Stderr = os.Stderr
+
+	// Start fzf
+	err = fzfCmd.Start()
+	if err != nil {
+		log.Fatalf("Failed to start fzf command: %v", err)
+	}
+
+	// Write kubectl output to fzf's stdin in a goroutine
+	go func() {
+		defer fzfInPipe.Close()
+		_, err := fzfInPipe.Write(podListBytes)
+		if err != nil {
+			// Log error, but don't necessarily kill the main process,
+			// fzf might still run or exit cleanly.
+			log.Printf("Error writing to fzf stdin pipe: %v", err)
+		}
+	}()
+
+	// Read fzf's selected output from its stdout pipe
+	var fzfOutput bytes.Buffer
+	_, err = io.Copy(&fzfOutput, fzfOutPipe) // Use io.Copy
+	if err != nil {
+		log.Fatalf("Failed to read fzf output pipe: %v", err)
+	}
+
+	// Wait for fzf to finish
+	err = fzfCmd.Wait()
+	if err != nil {
+		// Check if fzf was cancelled (exit code 130) or if no selection was made (exit code 1)
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			// Exit code 1 means no match, 130 means cancelled (e.g., Ctrl+C, Esc)
+			if exitErr.ExitCode() == 1 || exitErr.ExitCode() == 130 {
+				fmt.Println("No pod selected.")
+				os.Exit(0) // Exit gracefully
+			}
+		}
+		// Log other fzf errors
+		log.Fatalf("fzf command failed with error: %v", err)
+	}
+
+	// Process the selection
+	selectedPod := strings.TrimSpace(fzfOutput.String())
+
+	if selectedPod == "" {
+		// This case might be redundant due to the exit code check above, but good for safety.
+		fmt.Println("No pod selected.")
+	} else {
+		// Parse the selected line: "namespace podname"
+		parts := strings.Fields(selectedPod)
+		if len(parts) != 2 {
+			log.Fatalf("Error: Invalid format returned from fzf: %q", selectedPod)
+		}
+		namespace := parts[0]
+		podName := parts[1]
+
+		fmt.Printf("Fetching logs for pod %s in namespace %s...\n", podName, namespace)
+
+		// Execute kubectl logs -f
+		logsCmd := exec.Command("kubectl", "logs", "-f", podName, "-n", namespace)
+		logsCmd.Stdout = os.Stdout // Stream logs directly to terminal stdout
+		logsCmd.Stderr = os.Stderr // Stream errors directly to terminal stderr
+
+		err = logsCmd.Run() // Run the command and wait for it to complete
+		if err != nil {
+			// Log the error, but don't necessarily exit with Fatalf,
+			// as kubectl logs might return non-zero exit code for valid reasons (e.g., pod terminated)
+			log.Printf("kubectl logs command finished with error: %v", err)
+		}
+	}
 }
