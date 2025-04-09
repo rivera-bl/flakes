@@ -34,6 +34,9 @@ parser.add_argument('--load', type=str, metavar='sso_start_url', help='Load acco
                     cache_path + '` and sso.sessions in `~/.aws/config`, takes `sso_start_url` as an argument')
 parser.add_argument('--login', action='store_true',  help='Pipe `' +
                     cache_path + '` into FZF to select account to login with AWS SSO')
+parser.add_argument('--send-all', action='store_true', help='In tmux: Set session AWS_PROFILE and send export command to ALL panes.')
+parser.add_argument('--send-here', action='store_true', help='In tmux: Set session AWS_PROFILE and send export command to CURRENT pane.')
+
 
 args = parser.parse_args()
 
@@ -52,9 +55,7 @@ def main():
 
 
 def login(sso_session):
-    # login
-    if subprocess.call("which tmux >/dev/null 2>&1", shell=True) == 0:
-        tmux_session_setenv("AWS_PROFILE", sso_session)
+    # Check if already logged in (optional, kept original logic)
     loggedin = subprocess.run(
         ['aws', 'sts', 'get-caller-identity', '--profile', sso_session], capture_output=True)
     # TODO fix this! sometimes false positive
@@ -63,21 +64,69 @@ def login(sso_session):
     #     time.sleep(1)
     #     exit()
 
-    os.system('aws sso login --profile ' + sso_session)
-    print('\nUse this profile with `export AWS_PROFILE=' + sso_session + '`')
+    # Attempt SSO login
+    print(f"Attempting AWS SSO login for profile: {sso_session}...")
+    login_command = ['aws', 'sso', 'login', '--profile', sso_session]
+    # Use subprocess.run to capture status, but let user interact with stdin/stdout/stderr
+    result = subprocess.run(login_command)
 
+    # Check if login was successful
+    if result.returncode == 0:
+        print(f"\nSuccessfully logged in with profile: {sso_session}")
+        # Check if running inside tmux
+        if shutil.which('tmux') is not None:
+            did_tmux_action = False
+            # Set session env if either flag is present
+            if args.send_all or args.send_here:
+                tmux_set_session_env("AWS_PROFILE", sso_session)
+                print("Set AWS_PROFILE for tmux session.")
+                did_tmux_action = True # Mark that we set the session env
 
-def tmux_session_setenv(envar, sso_session):
-    if shutil.which('tmux') is not None:
-        # setenv
-        os.system('tmux setenv AWS_PROFILE ' + sso_session)
-        # export all zsh panes
-        command = "tmux list-panes -s -F '#{pane_id} #{pane_current_command}' | grep 'zsh' | cut -d' ' -f1 \
-                | xargs -I {} tmux send-keys -t {} \
-                'export " + envar + "=" + sso_session + "' Enter C-l"
-        os.system(command)
+            # Send keys based on flags
+            if args.send_all:
+                print("Sending AWS_PROFILE export to all zsh panes...")
+                tmux_send_keys_all_panes("AWS_PROFILE", sso_session)
+                print("Export command sent to all zsh panes.")
+                did_tmux_action = True # Mark that we sent keys
+            elif args.send_here: # Use elif to avoid sending twice if both flags are somehow set
+                print("Sending AWS_PROFILE export to current pane...")
+                tmux_send_keys_current_pane("AWS_PROFILE", sso_session)
+                print("Export command sent to current pane.")
+                did_tmux_action = True # Mark that we sent keys
+
+            if not did_tmux_action:
+                 print("Login successful. AWS_PROFILE not automatically exported to panes (use --send-all or --send-here).")
+
+        else:
+            # Outside tmux: print the export command for the user
+            print(f'\nLogin successful. Use this profile in your shell:')
+            print(f'export AWS_PROFILE={sso_session}')
+            print(f'\n# Run this command to apply:', file=os.sys.stderr)
+            print(f'# eval "$(fws --login)"', file=os.sys.stderr)
+
     else:
-        os.system("export " + envar + "=" + sso_session)
+        print(f"\nAWS SSO login failed for profile: {sso_session}", file=os.sys.stderr)
+
+
+def tmux_set_session_env(envar, value):
+    """Sets a tmux session environment variable."""
+    if shutil.which('tmux') is not None:
+        os.system(f'tmux setenv {envar} {value}')
+
+def tmux_send_keys_all_panes(envar, value):
+    """Sends export command to all zsh panes in the current tmux session."""
+    if shutil.which('tmux') is not None:
+        # export all zsh panes
+        command = f"tmux list-panes -s -F '#{{pane_id}} #{{pane_current_command}}' | grep 'zsh' | cut -d' ' -f1 \
+                | xargs -I {{}} tmux send-keys -t {{}} \
+                'export {envar}={value}' Enter C-l"
+        os.system(command)
+
+def tmux_send_keys_current_pane(envar, value):
+    """Sends export command to the current tmux pane."""
+    if shutil.which('tmux') is not None:
+        command = f"tmux send-keys 'export {envar}={value}' Enter C-l"
+        os.system(command)
 
 
 def sessions():
