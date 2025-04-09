@@ -19,7 +19,10 @@
         version = builtins.substring 0 8 lastModifiedDate;
       in rec
       {
-        packages = { myapp = mkPoetryApplication { projectDir = ./.; };
+        packages = { myapp = mkPoetryApplication { 
+          projectDir = ./.;
+          python = pkgs.python311;
+        };
           default = self.packages.${system}.myapp;
         };
 
