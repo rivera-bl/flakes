@@ -4,6 +4,7 @@ import sys
 import gitlab
 import csv
 import argparse
+import dotenv
 
 # TODO change dir after cloning
 # TODO describe repo preview and open with vi
@@ -59,9 +60,21 @@ def write_csv(project_list):
 def main():
     parser = argparse.ArgumentParser(description='Load GitLab projects and execute actions with Fzf.')
     parser.add_argument('--load', action='store_true', help=f'Load projects into {cache_path}')
+    parser.add_argument('--env-file', help='Path to a .env file to load environment variables from.')
     args = parser.parse_args()
 
+    # Load environment variables from file if specified
+    if args.env_file:
+        if os.path.exists(args.env_file):
+            # print(f"Loading environment variables from {args.env_file}")
+            dotenv.load_dotenv(dotenv_path=args.env_file)
+        else:
+            print(f"Warning: Specified env file '{args.env_file}' not found.", file=sys.stderr)
+
     if args.load or not os.path.isfile(cache_path):
+        # Ensure GITLAB_TOKEN is available after potentially loading .env
+        global GITLAB_TOKEN
+        GITLAB_TOKEN = os.environ.get('GITLAB_TOKEN')
         projects = get_projects()
         write_csv(projects)
 
