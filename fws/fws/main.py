@@ -138,7 +138,7 @@ def sessions():
 
 def accounts():
     # get latest sso token cached file
-    tpath = "/home/wim/.aws/sso/cache/"
+    tpath = home + ".aws/sso/cache/"
     tfiles = [os.path.join(tpath, x) for x in os.listdir(tpath)]
     tnewest = max(tfiles, key=os.path.getctime)
 
