@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 import gitlab
 import csv
 import argparse
@@ -11,7 +12,7 @@ import dotenv
 
 GITLAB_SERVER = os.environ.get('GITLAB_SERVER', 'https://gitlab.com')
 GITLAB_TOKEN = os.environ.get('GITLAB_TOKEN')
-cache_path = '/tmp/gla/projects.csv'
+cache_path = '~/.gla/projects.csv'
 open_bin = 'wsl-open'
 basedir = os.path.expanduser('~/code/gitlab')
 
@@ -20,10 +21,21 @@ def get_projects():
         print("Please set the GITLAB_TOKEN env variable.")
         sys.exit(1)
     gl = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN)
-    gl.auth()
 
-    print(f"Retrieving projects from {GITLAB_SERVER}..")
-    projects = gl.projects.list(all=True)
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            gl.auth()
+            print(f"Retrieving projects from {GITLAB_SERVER}..")
+            projects = gl.projects.list(all=True)
+            break
+        except gitlab.exceptions.GitlabError as e:
+            if attempt < max_retries - 1 and getattr(e, 'response_code', None) in (502, 503, 504):
+                wait = 2 ** attempt
+                print(f"Got {e.response_code}, retrying in {wait}s... (attempt {attempt + 1}/{max_retries})", file=sys.stderr)
+                time.sleep(wait)
+            else:
+                raise
     project_list = []
 
     # Add the header to the project_list
