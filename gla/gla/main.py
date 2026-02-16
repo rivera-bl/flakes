@@ -17,7 +17,7 @@ basedir = os.path.expanduser('~/code/gitlab')
 
 def get_projects():
     if not GITLAB_TOKEN:
-        print("Please set the GL_TOKEN env variable.")
+        print("Please set the GITLAB_TOKEN env variable.")
         sys.exit(1)
     gl = gitlab.Gitlab(GITLAB_SERVER, GITLAB_TOKEN)
     gl.auth()
