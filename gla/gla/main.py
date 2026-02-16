@@ -12,7 +12,7 @@ import dotenv
 
 GITLAB_SERVER = os.environ.get('GITLAB_SERVER', 'https://gitlab.com')
 GITLAB_TOKEN = os.environ.get('GITLAB_TOKEN')
-cache_path = '~/.gla/projects.csv'
+cache_path = os.path.expanduser('~/.gla/projects.csv')
 open_bin = 'wsl-open'
 basedir = os.path.expanduser('~/code/gitlab')
 
