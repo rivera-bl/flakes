@@ -147,19 +147,23 @@ def accounts():
         data = json.load(f)
         token = data['accessToken']
 
-    # list accounts
-    accountsraw = client.list_accounts(accessToken=token, maxResults=1000)
+    # list accounts (paginated, API caps maxResults at 100)
+    accountsraw = []
+    for page in client.get_paginator('list_accounts').paginate(accessToken=token):
+        accountsraw += page['accountList']
 
     # format to ',' separated strings
     accounts = "accountId,roleName,accountName,emailAddress\n"
     config = {}
-    for account in accountsraw['accountList']:
+    for account in accountsraw:
         # list roles for account using accountId
-        roles = client.list_account_roles(
-            accessToken=token, accountId=account['accountId'])
+        roles = []
+        for page in client.get_paginator('list_account_roles').paginate(
+                accessToken=token, accountId=account['accountId']):
+            roles += page['roleList']
 
         # list of roleName, accountId, accountName, emailAddress for each accountId
-        for role in roles['roleList']:
+        for role in roles:
             o = account['accountId'], role['roleName'], account['accountName'], account['emailAddress']
             accounts += ','.join(o) + "\n"
 
